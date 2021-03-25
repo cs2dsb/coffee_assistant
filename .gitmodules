@@ -1,0 +1,15 @@
+[submodule "hardware/kicad_custom"]
+	path = hardware/kicad_custom
+	url = git@github.com:cs2dsb/kicad_custom.git
+[submodule "software/third_party/esp-idf-template"]
+	path = software/third_party/esp-idf-template
+	url = git@github.com:espressif/esp-idf-template.git
+[submodule "software/third_party/esp-idf"]
+	path = software/third_party/esp-idf
+	url = git@github.com:espressif/esp-idf.git
+[submodule "software/third_party/esp32-wifi-manager"]
+	path = software/third_party/esp32-wifi-manager
+	url = git@github.com:tonyp7/esp32-wifi-manager.git
+[submodule "software/third_party/TM1638"]
+	path = software/third_party/TM1638
+	url = git@github.com:Hossein-M98/TM1638.git

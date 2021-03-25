@@ -1,0 +1,1 @@
+IDF_TOOLS_PATH=`realpath ./third_party/idf-tools`
