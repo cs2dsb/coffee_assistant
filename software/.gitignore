@@ -1,1 +1,11 @@
+arduino-cli.yml
+third_party
+.arduino*
+.env
+*.bin
+*.elf
 *.ansi
+*.log
+credentials.h
+build
+skeleton

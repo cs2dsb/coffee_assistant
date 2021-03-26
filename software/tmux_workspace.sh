@@ -47,19 +47,19 @@ else
         #|       | ocd   |       |
         #+-----------------------+
 
-        tmux send-keys -t $SESSION_NAME.0 "source ./export.sh; cd scale; make -j12 app" Enter
+        tmux send-keys -t $SESSION_NAME.0 "" Enter
         sleep 0.1
 
-        tmux send-keys -t $SESSION_NAME.1 "source ./export.sh; dmesg -w" Enter Enter
+        tmux send-keys -t $SESSION_NAME.1 "dmesg -w" Enter Enter
         sleep 0.1
 
-        tmux send-keys -t $SESSION_NAME.2 "source ./export.sh" Enter Enter
+        tmux send-keys -t $SESSION_NAME.2 "" Enter Enter
         sleep 0.1
 
-        tmux send-keys -t $SESSION_NAME.3 "source ./export.sh" Enter Enter
+        tmux send-keys -t $SESSION_NAME.3 "" Enter Enter
         sleep 0.1
 
-        tmux send-keys -t $SESSION_NAME.4 "source ./export.sh" Enter Enter
+        tmux send-keys -t $SESSION_NAME.4 "FLASH=true ./watch.sh skeleton" Enter Enter
         sleep 0.1
 fi
 
