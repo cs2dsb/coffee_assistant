@@ -23,7 +23,7 @@ if [ "$N" != "0" ]; then
 
     echo -e "$(tput setaf 0)$(tput setab 2)\n"
     echo "   Using port $ESPPORT"
-    echo "   Using baud $ESPBAUD"
+    echo "   Using baud $ESPBAUD\n"
     echo -e "$(tput sgr0)"
 fi
 
