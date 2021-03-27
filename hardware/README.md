@@ -1,5 +1,8 @@
 # coffee_assistant/hardware
 
+## notes
+*   Voltage supervisor
+
 ## nrf52
 
 A bluetooth module based around an nrf52840 designed to be connected to the other functional
