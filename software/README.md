@@ -6,10 +6,7 @@
 
 *   Captive portal
 *   mDNS service
-*   use SPIFFS for storing gzipped assets
-    *   test is working, update auto generated routes to serve these
-    *   esp32 panics if spiffs file doesn't exist, probably check in the handler?
-    *   brotli will only work over https
+*   brotli over https?
 
 ## controller
 

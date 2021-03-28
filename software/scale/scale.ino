@@ -3,7 +3,15 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
-#include "SPIFFS.h"
+
+#define USE_LittleFS
+#include <FS.h>
+#ifdef USE_LittleFS
+  #define SPIFFS LITTLEFS
+  #include <LITTLEFS.h>
+#else
+  #include <SPIFFS.h>
+#endif
 
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -14,6 +22,8 @@
 
 #include "credentials.h"
 #include "static/routes.h"
+#include "handlers.h"
+#include "utils.h"
 
 #define WAIT_FOR_SERIAL         true
 #define BAUD                    115200
@@ -79,9 +89,7 @@ void poll_tm1638(void);
 void blink(void);
 void process_buttons(byte buttons);
 bool delay_elapsed(unsigned long *last, unsigned long interval);
-void serial_printf(const char *fmt, ...);
 void fatal(void);
-int format(char* buf, int len, const char *fmt, ...);
 
 void setup() {
     setup_serial();
@@ -156,17 +164,17 @@ void setup_server(void) {
     register_routes(&server);
 
     // this doesn't work because brotli isn't enabled on http
-    server.on("/spiffy", HTTP_GET, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.br", "text/html", false);
-        response->addHeader("Content-Encoding", "br");
-        request->send(response);
-    });
+    // server.on("/spiffy", HTTP_GET, [](AsyncWebServerRequest *request){
+    //     AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.br", "text/html", false);
+    //     response->addHeader("Content-Encoding", "br");
+    //     request->send(response);
+    // });
 
-    server.on("/gzippy", HTTP_GET, [](AsyncWebServerRequest *request){
-        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.gz", "text/html", false);
-        response->addHeader("Content-Encoding", "gzip");
-        request->send(response);
-    });
+    // server.on("/gzippy", HTTP_GET, [](AsyncWebServerRequest *request){
+    //     AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.gz", "text/html", false);
+    //     response->addHeader("Content-Encoding", "gzip");
+    //     request->send(response);
+    // });
 
     // Install OTA
     AsyncElegantOTA.begin(&server);
@@ -310,37 +318,4 @@ void process_buttons(byte buttons) {
     if ((buttons >> 5) & 1 == 1) {
         elapsed = 0;
     }
-}
-
-bool delay_elapsed(unsigned long *last, unsigned long interval) {
-    unsigned long now = millis();
-
-    if (now - *last >= interval) {
-        *last = now;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void fatal() {
-    serial_printf("FATAL: Restarting...\n");
-    ESP.restart();
-}
-
-int format(char* buf, int len, const char *fmt, ...) {
-    va_list pargs;
-    va_start(pargs, fmt);
-    int chars = vsnprintf(buf, len, fmt, pargs);
-    va_end(pargs);
-    return chars;
-}
-
-void serial_printf(const char *fmt, ...) {
-  char buf[SERIAL_BUF_LEN];
-  va_list pargs;
-  va_start(pargs, fmt);
-  vsnprintf(buf, SERIAL_BUF_LEN, fmt, pargs);
-  va_end(pargs);
-  Serial.print(buf);
 }

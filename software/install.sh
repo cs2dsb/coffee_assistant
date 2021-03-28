@@ -18,6 +18,7 @@ GIT_LIBRARIES=(
     "ayushsharma82/AsyncElegantOTA"
     "gavinlyonsrepo/TM1638plus"
     "olkal/HX711_ADC"
+    "lorol/LITTLEFS"
 )
 
 source ./env.sh 2>/dev/null
@@ -66,6 +67,63 @@ if ! test -s $BROTLI &>/dev/null; then
     make
     cd ../..
 fi
+
+MKLITTLEFS=third_party/mklittlefs/mklittlefs
+if ! test -s $MKLITTLEFS &>/dev/null; then
+    mkdir -p third_party/mklittlefs/littlefs
+    cd third_party/mklittlefs
+
+    curl -sL https://api.github.com/repos/littlefs-project/littlefs/releases/latest \
+        | grep tarball_url \
+        | cut -d : -f 2,3 \
+        | tr -d \" \
+        | tr -d , \
+        | wget -q -O littlefs.tar.gz -i -
+    tar --strip-components=1 -xf littlefs.tar.gz -C littlefs
+    rm littlefs.tar.gz
+
+    curl -sL https://api.github.com/repos/earlephilhower/mklittlefs/releases/latest \
+        | grep tarball_url \
+        | cut -d : -f 2,3 \
+        | tr -d \" \
+        | tr -d , \
+        | wget -q -O mklittlefs.tar.gz -i -
+    tar --strip-components=1 -xf mklittlefs.tar.gz
+
+
+    rm mklittlefs.tar.gz
+    make
+    cd ../..
+fi
+
+# OPENJDK=third_party/openjdk/bin
+# if ! test -d $OPENJDK; then
+#     mkdir -p third_party/openjdk
+#     cd third_party/openjdk
+
+#     wget -q -O openjdk.tar.gz https://download.java.net/java/GA/jdk16/7863447f0ab643c585b9bdebf67c69db/36/GPL/openjdk-16_linux-x64_bin.tar.gz
+#     tar --strip-components=1 -xf openjdk.tar.gz
+#     rm openjdk.tar.gz
+#     cd ../..
+# fi
+# PATH="$PATH:`realpath $OPENJDK`"
+
+# ESP32FS=third_party/arduino-esp32fs-plugin/esp32fs.jar
+# if ! test -s $ESP32FS; then
+#     mkdir -p third_party/arduino-esp32fs-plugin
+#     cd third_party/arduino-esp32fs-plugin
+
+#     curl -sL https://api.github.com/repos/lorol/arduino-esp32fs-plugin/releases/latest \
+#         | grep esp32fs.zip \
+#         | grep browser_download_url \
+#         | cut -d : -f 2,3 \
+#         | tr -d \" \
+#         | tr -d , \
+#         | wget -q -O esp32fs.zip -i -
+#     unzip esp32fs.zip
+#     rm esp32fs.zip
+#     cd ../../
+# fi
 
 # Install esp32 core
 BASE_DIR="`realpath .`"
