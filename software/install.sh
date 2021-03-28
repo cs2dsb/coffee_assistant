@@ -49,6 +49,24 @@ if ! test -s $A_CLI &>/dev/null; then
     cd ../..
 fi
 
+BROTLI=third_party/brotli/brotli
+if ! test -s $BROTLI &>/dev/null; then
+    mkdir -p third_party/brotli
+    cd third_party/brotli
+
+    curl -sL https://api.github.com/repos/google/brotli/releases/latest \
+        | grep tarball_url \
+        | cut -d : -f 2,3 \
+        | tr -d \" \
+        | tr -d , \
+        | wget -q -O brotli.tar.gz -i -
+    tar --strip-components=1 -xf brotli.tar.gz
+    rm brotli.tar.gz
+    ./configure-cmake
+    make
+    cd ../..
+fi
+
 # Install esp32 core
 BASE_DIR="`realpath .`"
 cat > arduino-cli.yml <<- EOF

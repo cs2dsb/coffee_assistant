@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
+#include "SPIFFS.h"
 
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -12,7 +13,7 @@
 #include <HX711_ADC.h>
 
 #include "credentials.h"
-#include "static/index.html.h"
+#include "static/routes.h"
 
 #define WAIT_FOR_SERIAL         true
 #define BAUD                    115200
@@ -25,6 +26,7 @@
 #define TM1638_POLL_INTERVAL    100
 #define TM1638_UPDATE_INTERVAL  500
 #define HTTP_PORT               80
+#define DEFAULT_CALIBRATION     1100.0
 
 #define TM1638_HIGH_FREQ        true
 
@@ -40,8 +42,6 @@ const char* host            = MDNS_HOST;
 const char* ssid            = WIFI_SSID;
 const char* password        = WIFI_PASSWORD;
 
-// From static/*.html.h
-const char* server_index    = INDEX_HTML;
 
 // Global variables
 unsigned long last_blink_millis = 0;
@@ -65,6 +65,7 @@ AsyncWebServer server(HTTP_PORT);
 TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
 HX711_ADC hx711(PIN_HX711_DT, PIN_HX711_SCK);
 
+void setup_spiffs(void);
 void setup_serial(void);
 void setup_server(void);
 void setup_gpio(void);
@@ -88,6 +89,7 @@ void setup() {
     setup_tm1638();
     setup_hx711();
 
+    setup_spiffs();
     setup_server();
 
     // Wait while server starts up to let the hx711 stabilize before tareing
@@ -147,9 +149,23 @@ void setup_server(void) {
     serial_printf("Starting mDNS responder on %s.local\n", host);
     MDNS.begin(host);
 
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        serial_printf("GET /\n");
-        request->send(200, "text/html", server_index);
+    // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    //     serial_printf("GET /\n");
+    //     request->send(200, "text/html", server_index);
+    // });
+    register_routes(&server);
+
+    // this doesn't work because brotli isn't enabled on http
+    server.on("/spiffy", HTTP_GET, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.br", "text/html", false);
+        response->addHeader("Content-Encoding", "br");
+        request->send(response);
+    });
+
+    server.on("/gzippy", HTTP_GET, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.gz", "text/html", false);
+        response->addHeader("Content-Encoding", "gzip");
+        request->send(response);
     });
 
     // Install OTA
@@ -173,10 +189,18 @@ void setup_tm1638(void) {
 }
 
 void setup_hx711(void) {
+    hx711.setCalFactor(DEFAULT_CALIBRATION);
     hx711.begin();
     hx711.setSamplesInUse(1);
     hx711.start(0);
     hx711.update();
+}
+
+void setup_spiffs(void) {
+    if(!SPIFFS.begin()){
+        serial_printf("Failed to mount SPIFFS");
+        fatal();
+    }
 }
 
 void tare_hx711(bool wait) {

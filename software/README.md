@@ -4,10 +4,12 @@
 
 ### Todo
 
-*   `HX711` ADC/amp
-*   `TM1638` display + buttons
 *   Captive portal
 *   mDNS service
+*   use SPIFFS for storing gzipped assets
+    *   test is working, update auto generated routes to serve these
+    *   esp32 panics if spiffs file doesn't exist, probably check in the handler?
+    *   brotli will only work over https
 
 ## controller
 
