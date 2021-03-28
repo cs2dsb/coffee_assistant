@@ -9,3 +9,4 @@ third_party
 credentials.h
 build
 libraries
+test_routes.sh

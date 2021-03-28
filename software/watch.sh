@@ -20,7 +20,7 @@ TTY_BAUD=${TTY_BAUD:-115200}
 
 MONITOR_JOB=""
 
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+trap "trap - SIGTERM && kill -- && echo \"$(tput sgr0)\"-$$" SIGINT SIGTERM EXIT
 
 while true; do
     if [ "$MONITOR_JOB" != "" ]; then
@@ -36,8 +36,9 @@ while true; do
         SERIAL_PORT=`./find_port.sh 2>/dev/null`
         echo $SERIAL_PORT
         if [ "$SERIAL_PORT" == "" ]; then
-            echo "Failed to find a serial port" >&2
+            echo -e "$(tput setaf 0)$(tput setab 1)\n\n  Monitoring failed to find a serial port \n$(tput sgr0)"
         else
+            echo -e "$(tput setaf 0)$(tput setab 4)\n\n  Monitoring \n$(tput sgr0)"
             stty -F $SERIAL_PORT raw speed $TTY_BAUD
             cat $SERIAL_PORT &
             MONITOR_JOB="$!"
@@ -46,5 +47,7 @@ while true; do
 
     set -o errexit
 
+    echo "$(tput setaf 0)$(tput setab 4)"
     inotifywait -q -e close_write -r $FILES
+    echo "$(tput sgr0)"
 done

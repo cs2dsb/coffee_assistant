@@ -34,7 +34,8 @@
 #define BLINK_INTERVAL          1000
 #define HX711_POLL_INTERVAL     500
 #define TM1638_POLL_INTERVAL    100
-#define TM1638_UPDATE_INTERVAL  500
+#define TM1638_UPDATE_INTERVAL  50
+#define SERIAL_LOG_INTERVAL     1000
 #define HTTP_PORT               80
 #define DEFAULT_CALIBRATION     1100.0
 
@@ -64,6 +65,7 @@ unsigned long last_tm1638_poll_millis = 0;
 byte last_tm1638_buttons = false;
 
 unsigned long last_tm1638_update_millis = 0;
+unsigned long last_serial_log_millis = 0;
 
 unsigned long elapsed = 0;
 unsigned long last_elapsed_millis = 0;
@@ -287,17 +289,19 @@ void poll_tm1638(void) {
 
 void update_tm1638(void) {
     if (delay_elapsed(&last_tm1638_update_millis, TM1638_UPDATE_INTERVAL)) {
-        long seconds = elapsed / 1000;
-        while (seconds > 9999) {
-            seconds -= 9999;
+        float seconds = ((float)elapsed) / 1000.0;
+        while (seconds > 999.0) {
+            seconds -= 999.0;
         }
 
         char buf[SERIAL_BUF_LEN];
-        format(buf, SERIAL_BUF_LEN, "%4d%5.1f", seconds, last_hx711_value);
+        format(buf, SERIAL_BUF_LEN, "%5.1f%5.1f", seconds, last_hx711_value);
 
         tm1638.displayText(buf);
 
-        serial_printf("Time: %4d   Weight: %5.1f\n", seconds, last_hx711_value);
+        if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
+            serial_printf("Time: %5.1f   Weight: %5.1f\n", seconds, last_hx711_value);
+        }
     }
 }
 
