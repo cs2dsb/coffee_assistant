@@ -27,7 +27,7 @@ if [ "$FQBN" == "" ]; then
     exit 1
 fi
 
-if [ "$FLASH" == "true" ]; then
+if [ "$FLASH" == "true" ] || [ "$SPIFFS" == "true" ]; then
     SERIAL_PORT=`./find_port.sh`
     if [ "$SERIAL_PORT" == "" ]; then
         echo "Failed to find a serial port" >&2
@@ -66,9 +66,15 @@ EOF
     if [ "$TR" != "" ] && test -f "$TR"; then
         cat >> "$TR" <<- EOF
 
-out=\`curl -sSL -o /dev/null -D - http://$TEST_HOST/$2\`
-if [ "$?" == "0" ]; then
-    echo "OK  ($2)"
+out=\`curl -sSL -m 5 -o /dev/null -D - http://$TEST_HOST/$2 2>&1\`
+if [ "\$?" == "0" ]; then
+    tt=0
+    for i in {1..10}; do
+        t=\`curl -s -m 5 -o /dev/null -w "%{time_total}\n" http://$TEST_HOST/$2\`
+        tt=\`echo "\$tt + \$t" | bc\`
+    done
+    tt=\`echo "\$tt/10.0*1000." | bc -l | sed 's:0*$::'\`
+    echo "OK  ($2). Avg latency: \$tt ms"
 else
     echo "ERR ($2):"
     echo "\$out"
@@ -89,7 +95,8 @@ if test -d "$SPIFFS_DIR"; then
 fi
 
 if test -d "$STATIC"; then
-    BROTLI=third_party/brotli/brotli
+    BROTLI=./third_party/brotli/brotli
+    ZOPFLI=./third_party/zopfli/zopfli
     ROUTES="$STATIC/routes.h"
     TEST_ROUTES="${PROJECT}/test_routes.sh"
 
@@ -113,18 +120,26 @@ set -o nounset
 EOF
     chmod +x "$TEST_ROUTES"
 
-    find scale/static/ -type f \( -name \*.js -o -name \*.html \) -print0 |
-    while IFS= read -r -d '' path; do
+    find scale/static/ -type f \( \
+           -name \*.js   \
+        -o -name \*.html \
+        -o -name \*.css  \
+        -o -name \*.ico  \
+        -o -name \*.png  \
+        -o -name \*.gif  \
+        -o -name \*.jpg  \
+        \) -print0 |
+    while IFS= read -r -d '' path || [[ $path ]]; do
         dir="${path%*/*}"
         file="${path##*/}"
         mime="`file --mime-type "$path" --brief`"
         def=`echo "${file^^}" | tr '. ' _`
-        value="`cat $path`"
         route="`echo "$path" | sed "s|^${PROJECT}/static/||"`"
         spiffs_dir="$SPIFFS_DIR/`echo "${path%*/*}" | sed "s|^${PROJECT}/static||" | sed "s|^/||"`"
 
         $BROTLI --force --keep --best "$path"
-        gzip --force --keep --best "$path"
+        #gzip --force --keep --best "$path"
+        $ZOPFLI --force --keep --best "$path"
 
         mkdir -p "$spiffs_dir"
 
@@ -133,15 +148,6 @@ EOF
 
         #add_route "$ROUTES" "$route" "$def" "$mime" "br" "/$route.br"
         add_route "$ROUTES" "$route" "$def" "$mime" "gzip" "/$route.gz" "$TEST_ROUTES"
-
-        echo "#include \"${route}.h\"" >> "$STATIC/inc_tmp.h"
-
-        cat > "${dir}/${file}.h" <<- EOF
-#ifndef __${def}__
-#define __${def}__
-const char* const $def = R"( $value )";
-#endif
-EOF
     done
     echo -e "}" >> "$ROUTES"
 
@@ -151,7 +157,7 @@ EOF
 fi
 if test -d "$SPIFFS_DIR_OLD"; then
     set +o errexit
-    diff "$SPIFFS_DIR_OLD" "$SPIFFS_DIR" #&>/dev/null
+    diff -r "$SPIFFS_DIR_OLD" "$SPIFFS_DIR" #&>/dev/null
     if [ "$?" == "0" ]; then
         SPIFFS_DIFF=false
         echo -e "$(tput setaf 0)$(tput setab 3)\n\n  SPIFFS Unchanged. Skipping\n$(tput sgr0)"
@@ -210,7 +216,7 @@ if [ "$?" == "0" ]; then
         fi
     fi
 
-    if [ "$SPIFFS" == "true" ] && [ "$FLASH" == "true" ] && [ "$SPIFFS_DIFF" == "true" ]; then
+    if [ "$SPIFFS" == "true" ] && [ "$SPIFFS_DIFF" == "true" ]; then
         echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Packing SPIFFS\n$(tput sgr0)"
         SPIFFS_SIZE=`cat "${PROJECT}/build/partitions.csv" | grep spiffs | cut -d',' -f5`
         SPIFFS_OFFSET=`cat "${PROJECT}/build/partitions.csv" | grep spiffs | cut -d',' -f4`

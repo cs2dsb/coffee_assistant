@@ -20,7 +20,7 @@ TTY_BAUD=${TTY_BAUD:-115200}
 
 MONITOR_JOB=""
 
-trap "trap - SIGTERM && kill -- && echo \"$(tput sgr0)\"-$$" SIGINT SIGTERM EXIT
+trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 while true; do
     if [ "$MONITOR_JOB" != "" ]; then
@@ -44,10 +44,7 @@ while true; do
             MONITOR_JOB="$!"
         fi
     fi
-
     set -o errexit
 
-    echo "$(tput setaf 0)$(tput setab 4)"
     inotifywait -q -e close_write -r $FILES
-    echo "$(tput sgr0)"
 done

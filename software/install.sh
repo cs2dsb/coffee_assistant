@@ -68,6 +68,27 @@ if ! test -s $BROTLI &>/dev/null; then
     cd ../..
 fi
 
+
+
+ZOPFIL=third_party/zopfli/zopfli
+if ! test -s $ZOPFIL &>/dev/null; then
+    mkdir -p third_party/zopfli
+    cd third_party/zopfli
+
+    curl -sL https://api.github.com/repos/google/zopfli/releases/latest \
+        | grep tarball_url \
+        | cut -d : -f 2,3 \
+        | tr -d \" \
+        | tr -d , \
+        | wget -q -O zopfli.tar.gz -i -
+    tar --strip-components=1 -xf zopfli.tar.gz
+    rm zopfli.tar.gz
+
+    make
+
+    cd ../..
+fi
+
 MKLITTLEFS=third_party/mklittlefs/mklittlefs
 if ! test -s $MKLITTLEFS &>/dev/null; then
     mkdir -p third_party/mklittlefs/littlefs

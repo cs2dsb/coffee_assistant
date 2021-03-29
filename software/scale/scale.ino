@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
+#include <esp_wifi.h>
 
 #define USE_LittleFS
 #include <FS.h>
@@ -25,28 +26,32 @@
 #include "handlers.h"
 #include "utils.h"
 
-#define WAIT_FOR_SERIAL         true
-#define BAUD                    115200
-#define SERIAL_BUF_LEN          255
-#define WIFI_MODE               WIFI_AP_STA
-#define WAIT_FOR_WIFI           false
-#define WIFI_TIMEOUT_SECONDS    30
-#define BLINK_INTERVAL          1000
-#define HX711_POLL_INTERVAL     500
-#define TM1638_POLL_INTERVAL    100
-#define TM1638_UPDATE_INTERVAL  50
-#define SERIAL_LOG_INTERVAL     1000
-#define HTTP_PORT               80
-#define DEFAULT_CALIBRATION     1100.0
+#define WAIT_FOR_SERIAL                 true
+#define BAUD                            115200
+#define SERIAL_BUF_LEN                  255
+//#define WIFI_MODE                     WIFI_AP_STA
+#define WIFI_MODE                       WIFI_STA
+#define WIFI_POWERSAVING_MODE           WIFI_PS_NONE
+#define WAIT_FOR_WIFI                   false
+#define WIFI_TIMEOUT_SECONDS            30
+#define BLINK_INTERVAL                  1000
+#define HX711_POLL_INTERVAL             500
+#define TM1638_POLL_INTERVAL            100
+#define TM1638_UPDATE_INTERVAL          50
+#define WS_MESSAGE_INTERVAL             200
+#define SERIAL_LOG_INTERVAL             1000
+#define WIFI_STATUS_UPDATE_INTERVAL     1000
+#define HTTP_PORT                       80
+#define DEFAULT_CALIBRATION             1100.0
 
-#define TM1638_HIGH_FREQ        true
+#define TM1638_HIGH_FREQ                true
 
-#define PIN_TM1638_STB          27
-#define PIN_TM1638_CLK          26
-#define PIN_TM1638_DIO          25
-#define PIN_HX711_DT            14
-#define PIN_HX711_SCK           12
-#define PIN_LED                 21
+#define PIN_TM1638_STB                  27
+#define PIN_TM1638_CLK                  26
+#define PIN_TM1638_DIO                  25
+#define PIN_HX711_DT                    14
+#define PIN_HX711_SCK                   12
+#define PIN_LED                         21
 
 // From credentials.h
 const char* host            = MDNS_HOST;
@@ -66,14 +71,20 @@ byte last_tm1638_buttons = false;
 
 unsigned long last_tm1638_update_millis = 0;
 unsigned long last_serial_log_millis = 0;
+unsigned long last_ws_message_millis = 0;
+unsigned long last_wifi_status_update_millis = 0;
 
 unsigned long elapsed = 0;
 unsigned long last_elapsed_millis = 0;
+
+wl_status_t last_wifi_state = WL_DISCONNECTED;
 
 bool tare = false;
 bool calibrate = false;
 
 AsyncWebServer server(HTTP_PORT);
+AsyncWebSocket ws_server("/ws");
+
 TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
 HX711_ADC hx711(PIN_HX711_DT, PIN_HX711_SCK);
 
@@ -88,6 +99,7 @@ void setup_hx711(void);
 void poll_hx711(void);
 void tare_hx711(bool wait);
 void poll_tm1638(void);
+void poll_wifi_status(void);
 void blink(void);
 void process_buttons(byte buttons);
 bool delay_elapsed(unsigned long *last, unsigned long interval);
@@ -108,12 +120,14 @@ void setup() {
 
 void loop() {
     AsyncElegantOTA.loop();
+    ws_server.cleanupClients();
 
     blink();
     poll_hx711();
     poll_tm1638();
     update_tm1638();
     update_elapsed();
+    poll_wifi_status();
 
     delay(1);
 }
@@ -134,6 +148,7 @@ void setup_serial(void) {
 
 void setup_server(void) {
     WiFi.mode(WIFI_MODE);
+    esp_wifi_set_ps(WIFI_POWERSAVING_MODE);
 
     serial_printf("SSID: '%s'\n", ssid);
     WiFi.begin(ssid, password);
@@ -163,7 +178,10 @@ void setup_server(void) {
     //     serial_printf("GET /\n");
     //     request->send(200, "text/html", server_index);
     // });
-    register_routes(&server);
+    //register_routes(&server);
+
+    server.addHandler(&ws_server);
+    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
     // this doesn't work because brotli isn't enabled on http
     // server.on("/spiffy", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -181,13 +199,18 @@ void setup_server(void) {
     // Install OTA
     AsyncElegantOTA.begin(&server);
 
+    server.onNotFound([](AsyncWebServerRequest *request) {
+        serial_printf("GET %s 404\n", request->url().c_str());
+        request->send(404, "text/plain", "Not found");
+    });
+
     server.begin();
     MDNS.addService("http", "tcp", HTTP_PORT);
     serial_printf("HTTP listening on port %d\n", HTTP_PORT);
 }
 
 void setup_gpio(void) {
-  pinMode(PIN_LED, OUTPUT);
+    pinMode(PIN_LED, OUTPUT);
 }
 
 void setup_tm1638(void) {
@@ -287,6 +310,38 @@ void poll_tm1638(void) {
     }
 }
 
+void poll_wifi_status(void) {
+    if (delay_elapsed(&last_wifi_status_update_millis, WIFI_STATUS_UPDATE_INTERVAL)) {
+        wl_status_t status = WiFi.status();
+        if (last_wifi_state != status) {
+            switch (status) {
+                case WL_IDLE_STATUS:
+                    serial_printf("WiFi idle\n");
+                    break;
+                case WL_NO_SSID_AVAIL:
+                    serial_printf("WiFi no SSID available\n");
+                    break;
+                case WL_SCAN_COMPLETED:
+                    serial_printf("WiFi scan complete\n");
+                    break;
+                case WL_CONNECTED:
+                    serial_printf("WiFi connected\n");
+                    break;
+                case WL_CONNECT_FAILED:
+                    serial_printf("WiFi connection FAILED\n");
+                    break;
+                case WL_CONNECTION_LOST:
+                    serial_printf("WiFi connection LOST\n");
+                    break;
+                case WL_DISCONNECTED:
+                    serial_printf("WiFi disconnected\n");
+                    break;
+            }
+            last_wifi_state = status;
+        }
+    }
+}
+
 void update_tm1638(void) {
     if (delay_elapsed(&last_tm1638_update_millis, TM1638_UPDATE_INTERVAL)) {
         float seconds = ((float)elapsed) / 1000.0;
@@ -298,6 +353,11 @@ void update_tm1638(void) {
         format(buf, SERIAL_BUF_LEN, "%5.1f%5.1f", seconds, last_hx711_value);
 
         tm1638.displayText(buf);
+
+        if (delay_elapsed(&last_ws_message_millis, WS_MESSAGE_INTERVAL)) {
+            format(buf, SERIAL_BUF_LEN, "{ \"time\": %5.1f, \"weight\": %5.1f }", seconds, last_hx711_value);
+            ws_server.textAll(buf);
+        }
 
         if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
             serial_printf("Time: %5.1f   Weight: %5.1f\n", seconds, last_hx711_value);
