@@ -4,15 +4,10 @@
 #include <WiFiClient.h>
 #include <ESPmDNS.h>
 #include <esp_wifi.h>
-
-#define USE_LittleFS
 #include <FS.h>
-#ifdef USE_LittleFS
-  #define SPIFFS LITTLEFS
-  #include <LITTLEFS.h>
-#else
-  #include <SPIFFS.h>
-#endif
+#define SPIFFS LITTLEFS
+#include <LITTLEFS.h>
+#include <EEPROM.h>
 
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -25,6 +20,7 @@
 #include "static/routes.h"
 #include "handlers.h"
 #include "utils.h"
+
 
 #define WAIT_FOR_SERIAL                 true
 #define BAUD                            115200
@@ -39,10 +35,11 @@
 #define TM1638_POLL_INTERVAL            100
 #define TM1638_UPDATE_INTERVAL          50
 #define WS_MESSAGE_INTERVAL             200
-#define SERIAL_LOG_INTERVAL             1000
+#define SERIAL_LOG_INTERVAL             10000
 #define WIFI_STATUS_UPDATE_INTERVAL     1000
 #define HTTP_PORT                       80
-#define DEFAULT_CALIBRATION             1100.0
+#define DEFAULT_CALIBRATION             3753.989990
+#define CAL_DELAY                       0 //15000.0
 
 #define TM1638_HIGH_FREQ                true
 
@@ -53,10 +50,20 @@
 #define PIN_HX711_SCK                   12
 #define PIN_LED                         21
 
+// EEPROM is actually emulated using a flash 'partition' that's bigger than 512
+#define EEPROM_SIZE                     512
+#define EEPROM_VAL_VALID_ADDR           0
+#define EEPROM_CAL_ADDR                 4
+#define EEPROM_VAL_VALID_VALUE          0xCAFEBEEF
+
 // From credentials.h
 const char* host            = MDNS_HOST;
 const char* ssid            = WIFI_SSID;
 const char* password        = WIFI_PASSWORD;
+
+
+const char* cal_command = "calibrate";
+const char* tare_command = "tare";
 
 
 // Global variables
@@ -77,6 +84,8 @@ unsigned long last_wifi_status_update_millis = 0;
 unsigned long elapsed = 0;
 unsigned long last_elapsed_millis = 0;
 
+unsigned long cal_at = CAL_DELAY;
+
 wl_status_t last_wifi_state = WL_DISCONNECTED;
 
 bool tare = false;
@@ -85,7 +94,7 @@ bool calibrate = false;
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws_server("/ws");
 
-TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
+//TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
 HX711_ADC hx711(PIN_HX711_DT, PIN_HX711_SCK);
 
 void setup_spiffs(void);
@@ -96,6 +105,7 @@ void setup_tm1638(void);
 void update_tm1638(void);
 void update_elapsed(void);
 void setup_hx711(void);
+void setup_eeprom(void);
 void poll_hx711(void);
 void tare_hx711(bool wait);
 void poll_tm1638(void);
@@ -104,14 +114,20 @@ void blink(void);
 void process_buttons(byte buttons);
 bool delay_elapsed(unsigned long *last, unsigned long interval);
 void fatal(void);
+float get_cal_from_eeprom(void);
+void save_cal_to_eeprom(float cal);
+void on_websocket_event(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
+
 
 void setup() {
     setup_serial();
+    setup_eeprom();
     setup_gpio();
+    setup_spiffs();
+
     setup_tm1638();
     setup_hx711();
 
-    setup_spiffs();
     setup_server();
 
     // Wait while server starts up to let the hx711 stabilize before tareing
@@ -128,6 +144,20 @@ void loop() {
     update_tm1638();
     update_elapsed();
     poll_wifi_status();
+
+
+    if (cal_at != 0) {
+        unsigned long now = millis();
+        if (now < cal_at) {
+            unsigned long delta = cal_at - now;
+            serial_printf("Cal in %lu\n", delta);
+            delay(100);
+        } else {
+            cal_at = 0;
+            calibrate = true;
+        }
+    }
+
 
     delay(1);
 }
@@ -174,31 +204,17 @@ void setup_server(void) {
     serial_printf("Starting mDNS responder on %s.local\n", host);
     MDNS.begin(host);
 
-    // server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    //     serial_printf("GET /\n");
-    //     request->send(200, "text/html", server_index);
-    // });
-    //register_routes(&server);
-
+    // Configure websockets
+    ws_server.onEvent(on_websocket_event);
     server.addHandler(&ws_server);
+
+    // Configure static files
     server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 
-    // this doesn't work because brotli isn't enabled on http
-    // server.on("/spiffy", HTTP_GET, [](AsyncWebServerRequest *request){
-    //     AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.br", "text/html", false);
-    //     response->addHeader("Content-Encoding", "br");
-    //     request->send(response);
-    // });
-
-    // server.on("/gzippy", HTTP_GET, [](AsyncWebServerRequest *request){
-    //     AsyncWebServerResponse *response = request->beginResponse(SPIFFS, "/index.html.gz", "text/html", false);
-    //     response->addHeader("Content-Encoding", "gzip");
-    //     request->send(response);
-    // });
-
-    // Install OTA
+    // Configure OTA
     AsyncElegantOTA.begin(&server);
 
+    // 404 handler
     server.onNotFound([](AsyncWebServerRequest *request) {
         serial_printf("GET %s 404\n", request->url().c_str());
         request->send(404, "text/plain", "Not found");
@@ -214,15 +230,20 @@ void setup_gpio(void) {
 }
 
 void setup_tm1638(void) {
-    tm1638.displayBegin();
-    tm1638.displayText("booted");
+//     tm1638.displayBegin();
+//     tm1638.displayText("booted");
 
-    // All LEDs OFF
-    tm1638.setLEDs(0x0000);
+//     // All LEDs OFF
+//     tm1638.setLEDs(0x0000);
+}
+
+void setup_eeprom(void) {
+    EEPROM.begin(EEPROM_SIZE);
 }
 
 void setup_hx711(void) {
-    hx711.setCalFactor(DEFAULT_CALIBRATION);
+    float cal = get_cal_from_eeprom();
+    hx711.setCalFactor(cal);
     hx711.begin();
     hx711.setSamplesInUse(1);
     hx711.start(0);
@@ -262,7 +283,7 @@ void blink(void) {
         }
 
         digitalWrite(PIN_LED, last_blink_state);
-        tm1638.setLED(0, last_blink_state);
+        //tm1638.setLED(0, last_blink_state);
     }
 }
 
@@ -278,6 +299,9 @@ void poll_hx711(void) {
 
             if (hx711.getTareStatus()) {
                 serial_printf("tare complete\n");
+
+                ws_server.textAll("{ \"tare\": true }");
+                elapsed = 0.0;
             }
 
             if (calibrate) {
@@ -292,7 +316,13 @@ void poll_hx711(void) {
                 float calibration = hx711.getNewCalibration(known_mass);
                 hx711.setSamplesInUse(1);
                 serial_printf("new calibration: %f\n", calibration);
+                save_cal_to_eeprom(calibration);
 
+                char buf[SERIAL_BUF_LEN];
+                format(buf, SERIAL_BUF_LEN, "{ \"calibration_value\": %.3f }", calibration);
+                ws_server.textAll(buf);
+
+                elapsed = 0.0;
                 calibrate = false;
             }
         }
@@ -300,14 +330,13 @@ void poll_hx711(void) {
 }
 
 void poll_tm1638(void) {
-    if (delay_elapsed(&last_tm1638_poll_millis, TM1638_POLL_INTERVAL)) {
-        byte buttons = tm1638.readButtons();
-        if (buttons != last_tm1638_buttons) {
-            last_tm1638_buttons = buttons;
-            serial_printf("tm1638 buttons: %lu\n", last_tm1638_buttons);
-            process_buttons(last_tm1638_buttons);
-        }
-    }
+    // if (delay_elapsed(&last_tm1638_poll_millis, TM1638_POLL_INTERVAL)) {
+    //     byte buttons = tm1638.readButtons();
+    //     if (buttons != last_tm1638_buttons) {
+    //         //last_tm1638_buttons = buttons;
+    //         process_buttons(buttons);
+    //     }
+    // }
 }
 
 void poll_wifi_status(void) {
@@ -350,9 +379,9 @@ void update_tm1638(void) {
         }
 
         char buf[SERIAL_BUF_LEN];
-        format(buf, SERIAL_BUF_LEN, "%5.1f%5.1f", seconds, last_hx711_value);
+    //     format(buf, SERIAL_BUF_LEN, "%5.1f%5.1f", seconds, last_hx711_value);
 
-        tm1638.displayText(buf);
+    //     tm1638.displayText(buf);
 
         if (delay_elapsed(&last_ws_message_millis, WS_MESSAGE_INTERVAL)) {
             format(buf, SERIAL_BUF_LEN, "{ \"time\": %5.1f, \"weight\": %5.1f }", seconds, last_hx711_value);
@@ -381,5 +410,58 @@ void process_buttons(byte buttons) {
     }
     if ((buttons >> 5) & 1 == 1) {
         elapsed = 0;
+    }
+}
+
+
+float get_cal_from_eeprom(void) {
+    unsigned is_valid;
+    EEPROM.get(EEPROM_VAL_VALID_ADDR, is_valid);
+
+    float cal = DEFAULT_CALIBRATION;
+
+    if (is_valid == EEPROM_VAL_VALID_VALUE) {
+        EEPROM.get(EEPROM_CAL_ADDR, cal);
+    }
+
+    return cal;
+}
+
+void save_cal_to_eeprom(float cal) {
+    unsigned is_valid = EEPROM_VAL_VALID_VALUE;
+
+    EEPROM.put(EEPROM_CAL_ADDR, cal);
+    EEPROM.put(EEPROM_VAL_VALID_ADDR, is_valid);
+    EEPROM.commit();
+}
+
+void on_websocket_event(
+    AsyncWebSocket * server,
+    AsyncWebSocketClient * client,
+    AwsEventType type,
+    void* arg,
+    uint8_t *data,
+    size_t len
+) {
+    if (type == WS_EVT_CONNECT) {
+        serial_printf("ws[%s][%u] connect\n", server->url(), client->id());
+    } else if (type == WS_EVT_DISCONNECT) {
+        serial_printf("ws[%s][%u] disconnect\n", server->url(), client->id());
+    } else if (type == WS_EVT_ERROR) {
+        serial_printf("ws[%s][%u] error(%u): %s\n", server->url(), client->id(), *((uint16_t*)arg), (char*)data);
+    } else if (type == WS_EVT_PONG) {
+        serial_printf("ws[%s][%u] pong[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+    } else if (type == WS_EVT_DATA) {
+        serial_printf("ws[%s][%u] data[%u]: %s\n", server->url(), client->id(), len, (len)?(char*)data:"");
+        //AwsFrameInfo * info = (AwsFrameInfo*) arg;
+
+        char* msg = (char*)data;
+        if (strcmp(msg, cal_command) == 0) {
+            serial_printf("websocket client requested calibration\n");
+            calibrate = true;
+        } else if (strcmp(msg, tare_command) == 0) {
+            serial_printf("websocket client requested tare\n");
+            tare = true;
+        }
     }
 }

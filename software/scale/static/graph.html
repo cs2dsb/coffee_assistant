@@ -2,12 +2,17 @@
 <html style="height: 100%">
 <head>
     <meta charset="utf-8" />
-    <title>Time against Weight</title>
+    <title>Time against Weight </title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
 </head>
 <body style="height: 100%">
     <div id="graph" style="height: 80%"></div>
-    <div id="weight" style="height: 20%"></div>
+    <div id="weight" style="height: 10%"></div>
+    <div id="cal_status"></div>
+    <div>
+        <button id="tare">Tare</button>
+        <button id="calibrate">Calibrate</button>
+    </div>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/boost.js"></script>
@@ -28,11 +33,27 @@
             series: [{ name: 'Weight', data: [] }],
         });
 
+        const set_status = (status) => weight.innerHTML = status;
+        const clear_chart = () => chart.series[0].setData([]);
+
         window.events.on("websocket_json", (json) => {
-            console.log("Got json from websocket", json);
-            chart.series[0].addPoint([json.time, json.weight]);
-            weight.innerHTML = ` ${json.weight}g in ${json.time} seconds `;
+            if (json.time != undefined && json.weight != undefined) {
+                chart.series[0].addPoint([json.time, json.weight]);
+                set_status(` ${json.weight}g in ${json.time} seconds `);
+            } else if (json.tare != undefined) {
+                clear_chart();
+                set_status("Tared");
+            } else if (json.calibration_value != undefined) {
+                clear_chart();
+                cal_status.innerHTML = `Calibration value: ${ json.calibration_value }`;
+            } else {
+                console.log("Unhandled message:", json);
+            }
         });
+
+        tare.onclick = () => window.events.emit("websocket_send", "tare");
+        calibrate.onclick = () => window.events.emit("websocket_send", "calibrate");
+
     </script>
 </body>
 </html>

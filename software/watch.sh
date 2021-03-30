@@ -23,12 +23,12 @@ MONITOR_JOB=""
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
 while true; do
+    set +o errexit
     if [ "$MONITOR_JOB" != "" ]; then
         kill $MONITOR_JOB
         MONITOR_JOB=""
     fi
 
-    set +o errexit
     ./build.sh "$PROJECT"
     RC=$?
 
