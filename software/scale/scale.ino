@@ -14,7 +14,6 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
-#include <TM1638plus.h>
 #include <HX711_ADC.h>
 
 #include "credentials.h"
@@ -33,8 +32,6 @@
 #define WIFI_TIMEOUT_SECONDS            30
 #define BLINK_INTERVAL                  1000
 #define HX711_POLL_INTERVAL             500
-#define TM1638_POLL_INTERVAL            100
-#define TM1638_UPDATE_INTERVAL          50
 #define WS_MESSAGE_INTERVAL             200
 #define SERIAL_LOG_INTERVAL             10000
 #define WIFI_STATUS_UPDATE_INTERVAL     1000
@@ -42,13 +39,12 @@
 #define HTTP_PORT                       80
 #define DEFAULT_CALIBRATION             3753.989990
 
-#define TM1638_HIGH_FREQ                true
+#define PIN_TARE                        26
+#define PIN_CAL                         27
 
-#define PIN_TM1638_STB                  27
-#define PIN_TM1638_CLK                  26
-#define PIN_TM1638_DIO                  25
 #define PIN_HX711_DT                    14
 #define PIN_HX711_SCK                   12
+
 #define PIN_LED                         21
 
 // EEPROM is actually emulated using a flash 'partition' that's bigger than 512
@@ -100,16 +96,14 @@ float weight_ema_2 = 0.0;
 float weight_ema_3 = 0.0;
 float weight_last_change_time   = 0.0;
 
-unsigned long last_tm1638_poll_millis = 0;
-byte last_tm1638_buttons = false;
-
 // last time various periodic functions were run
-unsigned long last_tm1638_update_millis = 0;
 unsigned long last_serial_log_millis = 0;
 unsigned long last_ws_message_millis = 0;
 unsigned long last_wifi_status_update_millis = 0;
 unsigned long last_elapsed_millis = 0;
 unsigned long last_timer_update_millis = 0;
+unsigned long last_tare_millis = 0;
+unsigned long last_cal_millis = 0;
 
 // elapsed_millis is updated every time loop is called
 unsigned long elapsed_millis = 0;
@@ -126,21 +120,17 @@ bool calibrate = false;
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws_server("/ws");
 
-//TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
 HX711_ADC hx711(PIN_HX711_DT, PIN_HX711_SCK);
 
 void setup_spiffs(void);
 void setup_serial(void);
 void setup_server(void);
 void setup_gpio(void);
-void setup_tm1638(void);
-void update_tm1638(void);
 void update_elapsed(void);
 void setup_hx711(void);
 void setup_eeprom(void);
 void poll_hx711(void);
 void tare_hx711(bool wait);
-void poll_tm1638(void);
 void poll_wifi_status(void);
 void blink(void);
 void process_buttons(byte buttons);
@@ -151,6 +141,9 @@ void save_cal_to_eeprom(float cal);
 void on_websocket_event(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
 void reset_timer(void);
 void send_websocket_measurement(measurement m);
+void update_serial(void);
+void tare_isr(void);
+void cal_isr(void);
 
 void setup() {
     setup_serial();
@@ -158,7 +151,6 @@ void setup() {
     setup_gpio();
     setup_spiffs();
 
-    setup_tm1638();
     setup_hx711();
 
     setup_server();
@@ -175,9 +167,8 @@ void loop() {
 
     poll_hx711();
 
-    poll_tm1638();
-    update_tm1638();
     update_elapsed();
+    update_serial();
     poll_wifi_status();
 
     delay(1);
@@ -248,14 +239,12 @@ void setup_server(void) {
 
 void setup_gpio(void) {
     pinMode(PIN_LED, OUTPUT);
-}
 
-void setup_tm1638(void) {
-//     tm1638.displayBegin();
-//     tm1638.displayText("booted");
+    pinMode(PIN_TARE, INPUT);
+    pinMode(PIN_CAL, INPUT);
 
-//     // All LEDs OFF
-//     tm1638.setLEDs(0x0000);
+    attachInterrupt(digitalPinToInterrupt(PIN_TARE), tare_isr, FALLING);
+    attachInterrupt(digitalPinToInterrupt(PIN_CAL), cal_isr, FALLING);
 }
 
 void setup_eeprom(void) {
@@ -304,7 +293,6 @@ void blink(void) {
         }
 
         digitalWrite(PIN_LED, last_blink_state);
-        //tm1638.setLED(0, last_blink_state);
     }
 }
 
@@ -361,6 +349,9 @@ void poll_hx711(void) {
             bool start = delta > WEIGHT_START_DELTA;
 
             log_d("delta: %f, timer_running: %s, change: %s, start: %s", delta, timer_running ? "true" : "false", change ? "true" : "false", start ? "true" : "false" );
+            //int t = digitalRead(PIN_TARE);
+            //int c = digitalRead(PIN_CAL);
+            //log_d("tare: %s, cal: %s", t?"true":"false", c?"true":"false");
 
             if (!timer_running && start) {
                 reset_timer();
@@ -384,16 +375,6 @@ void poll_hx711(void) {
             });
         }
     }
-}
-
-void poll_tm1638(void) {
-    // if (delay_elapsed(&last_tm1638_poll_millis, TM1638_POLL_INTERVAL)) {
-    //     byte buttons = tm1638.readButtons();
-    //     if (buttons != last_tm1638_buttons) {
-    //         //last_tm1638_buttons = buttons;
-    //         process_buttons(buttons);
-    //     }
-    // }
 }
 
 void poll_wifi_status(void) {
@@ -428,19 +409,9 @@ void poll_wifi_status(void) {
     }
 }
 
-void update_tm1638(void) {
-    if (delay_elapsed(&last_tm1638_update_millis, TM1638_UPDATE_INTERVAL)) {
-        float seconds = elapsed_seconds;
-        while (seconds > 999.0) {
-            seconds -= 999.0;
-        }
-
-        // format(buf, SERIAL_BUF_LEN, "%5.1f%5.1f", seconds, last_hx711_value);
-        // tm1638.displayText(buf);
-
-        if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
-            serial_printf("Time: %.1f   Weight: %.1f\n", seconds, last_hx711_value);
-        }
+void update_serial(void) {
+    if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
+        serial_printf("Time: %.1f   Weight: %.1f\n", elapsed_seconds, last_hx711_value);
     }
 }
 
@@ -542,5 +513,21 @@ void send_websocket_measurement(measurement m) {
             m.ema3
         );
         ws_server.textAll(buf);
+    }
+}
+
+void tare_isr(void) {
+    unsigned long now = millis();
+    if (now - last_tare_millis > 1000) {
+        last_tare_millis = now;
+        tare = true;
+    }
+}
+
+void cal_isr(void) {
+    unsigned long now = millis();
+    if (now - last_cal_millis > 1000) {
+        last_cal_millis = now;
+        calibrate = true;
     }
 }
