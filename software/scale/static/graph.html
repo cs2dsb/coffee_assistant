@@ -2,17 +2,49 @@
 <html style="height: 100%">
 <head>
     <meta charset="utf-8" />
-    <title>Time against Weight </title>
+    <title>Time against Weight</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type="text/css">
+        html, body {
+            height: 100%;
+            min-height: 100%;
+            overflow: hidden;
+            margin: 0;
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+
+        #weight {
+            font-weight: bolder;
+            font-size: 40px;
+        }
+
+        #graph {
+            height: 50%;
+        }
+
+        #log {
+            height: 10%;
+            overflow-y: scroll;
+            border:1px solid black;
+            color: white;
+        }
+
+        #log p {
+            margin: 1px;
+        }
+    </style>
 </head>
-<body style="height: 100%">
-    <div id="graph" style="height: 80%"></div>
-    <div id="weight" style="height: 10%"></div>
+<body>
+    <div id="graph"></div>
+    <div id="weight"></div>
     <div id="cal_status"></div>
+    <div id="dots"></div>
     <div>
         <button id="tare">Tare</button>
         <button id="calibrate">Calibrate</button>
     </div>
+    <div id="log"></div>
 
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/modules/boost.js"></script>
@@ -23,29 +55,78 @@
     <script src="/js/ws.js"></script>
 
     <script type="text/javascript">
+        const append_log = (text) => {
+            var e = document.createElement('p');
+            e.innerHTML = text;
+            while (log.children.length > 99) {
+              log.children[0].remove();
+            }
+            log.appendChild(e);
+            log.scrollTop = log.scrollHeight;
+        };
+
         const chart = Highcharts.chart('graph', {
             boost: { useGPUTranslations: true, usePreAllocated: true },
             chart: { animation: false },
             title: { text: 'Time against Weight' },
-            yAxis: { title: { text: 'Weight (g)' }},
+            yAxis: { title: { text: 'Weight (g)' }, softMax: 25, softMin: 0, minPadding: 0, maxPadding: 0 },
             xAxis: { title: { text: 'Time (seconds)' }},
             plotOptions: { series: { label: { connectorAllowed: false }}},
-            series: [{ name: 'Weight', data: [] }],
+            series: [
+                { name: 'Weight', data: [] },
+                // { name: 'S1', data: [] },
+                // { name: 'S2', data: [] },
+                // { name: 'X', data: [] },
+                // { name: 'RUNNING', data: [] },
+            ],
         });
 
+        let last_time = 0;
+        let last_weight = 0;
+
         const set_status = (status) => weight.innerHTML = status;
-        const clear_chart = () => chart.series[0].setData([]);
+        const clear_chart = () => {
+            for (var i = 0; i < chart.series.length; i++) {
+                chart.series[i].setData([]);
+            }
+            last_weight = 0;
+            last_time = 0;
+        };
 
         window.events.on("websocket_json", (json) => {
+            dots.innerHTML += ".";
             if (json.time != undefined && json.weight != undefined) {
-                chart.series[0].addPoint([json.time, json.weight]);
-                set_status(` ${json.weight}g in ${json.time} seconds `);
+                set_status(` ${json.weight} g`);
+
+                if (json.timer_running == true) {
+                    if (last_time > json.time) {
+                        append_log(` ${ last_weight } g in ${ last_time } s`);
+                        clear_chart();
+                    }
+                    const shift = chart.series[0].data.length >= 10000;
+                    chart.series[0].addPoint([json.time, json.weight], true, shift);
+                    last_time = json.time;
+                    if (json.weight > last_weight) {
+                        last_weight = json.weight;
+                    }
+
+                    // let x = (json.ema2 - json.ema3) * 10;
+                    // let running = 10;
+                    // if (json.timer_running) {
+                    //     running += 5;
+                    // }
+                    // chart.series[1].addPoint([json.time, json.ema2]);
+                    // chart.series[2].addPoint([json.time, json.ema3]);
+                    // chart.series[3].addPoint([json.time, x]);
+                    // chart.series[4].addPoint([json.time, running]);
+                }
             } else if (json.tare != undefined) {
                 clear_chart();
-                set_status("Tared");
+                set_status("0g");
+                append_log("Tared");
             } else if (json.calibration_value != undefined) {
                 clear_chart();
-                cal_status.innerHTML = `Calibration value: ${ json.calibration_value }`;
+                append_log(`Calibration value: ${ json.calibration_value }`);
             } else {
                 console.log("Unhandled message:", json);
             }

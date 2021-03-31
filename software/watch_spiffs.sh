@@ -33,7 +33,7 @@ while true; do
     fi
 
 
-    ./build.sh "$PROJECT"
+    ./spiffs.sh "$PROJECT"
     RC=$?
 
     if [ "$RC" == "0" ] && [ "$MONITOR" == "true" ]; then

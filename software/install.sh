@@ -15,7 +15,7 @@ set -o pipefail
 GIT_LIBRARIES=(
     "me-no-dev/AsyncTCP"
     "me-no-dev/ESPAsyncWebServer"
-    "ayushsharma82/AsyncElegantOTA"
+    "cs2dsb/AsyncElegantOTA"
     "gavinlyonsrepo/TM1638plus"
     "olkal/HX711_ADC"
     "lorol/LITTLEFS"
