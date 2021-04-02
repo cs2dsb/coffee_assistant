@@ -6,8 +6,10 @@
 function export_env() {
     if test -s "$1"; then
         while IFS="" read -r line || [ -n "$line" ]; do
-            echo "Exporting: $line" 1>&2
-            export $line
+            VAR=`echo "$line" | cut -d'=' -f1 | xargs`
+            VAL=`echo "$line" | cut -d'=' -f2 | xargs`
+            echo "Exporting: $VAR=\"$VAL\"" 1>&2
+            export $VAR="$VAL"
         done < <(sed '/^\s*$/d' "$1" | sed '/^#/d') # seds remove comments and empty lines
     fi
 }

@@ -22,6 +22,10 @@
 #include "utils.h"
 
 
+// The built in static file handler is probably better but
+// it doesn't log anything which can be useful to make sure
+// clients are really requesting files rather than using cached
+#define USE_BUILTIN_STATIC              true
 #define WAIT_FOR_SERIAL                 true
 #define BAUD                            115200
 #define SERIAL_BUF_LEN                  255
@@ -61,17 +65,17 @@
 #define WEIGHT_START_DELTA              0.3
 #define WEIGHT_EMA_FACTOR_1             0.95
 #define WEIGHT_EMA_FACTOR_2             0.9
-#define WEIGHT_EMA_FACTOR_3             0.7
-#define WEIGHT_IDLE_TIMEOUT             1.0
+#define WEIGHT_EMA_FACTOR_3             0.6
+#define WEIGHT_EMA_FACTOR_4             0.05
+#define WEIGHT_IDLE_TIMEOUT             2.0
 
 // From credentials.h
 const char* host            = MDNS_HOST;
 const char* ssid            = WIFI_SSID;
 const char* password        = WIFI_PASSWORD;
 
-
-const char* cal_command     = "calibrate";
-const char* tare_command    = "tare";
+const char* cal_command     = "do-calibrate";
+const char* tare_command    = "do-tare";
 
 // How much the calibration weight is
 float known_mass            = KNOWN_CALIBRATION_MASS_DEFAULT;
@@ -88,13 +92,16 @@ struct measurement {
 unsigned long last_blink_millis = 0;
 int last_blink_state = LOW;
 
-unsigned long last_hx711_poll_millis = 0;
-float last_hx711_value = 0.0;
-float recent_weight = 0.0;
-float weight_ema_1 = 0.0;
-float weight_ema_2 = 0.0;
-float weight_ema_3 = 0.0;
-float weight_last_change_time   = 0.0;
+unsigned long last_weight_poll_millis = 0;
+float weight_last_change_time         = 0.0;
+
+float weight_new    = 0.0;
+float weight_start  = 0.0;
+float weight_peak   = 0.0;
+float weight_ema_1  = 0.0;
+float weight_ema_2  = 0.0;
+float weight_ema_3  = 0.0;
+float weight_ema_4  = 0.0;
 
 // last time various periodic functions were run
 unsigned long last_serial_log_millis = 0;
@@ -221,7 +228,11 @@ void setup_server(void) {
     server.addHandler(&ws_server);
 
     // Configure static files
-    server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    if (USE_BUILTIN_STATIC) {
+        server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
+    } else {
+        register_routes(&server);
+    }
 
     // Configure OTA
     AsyncElegantOTA.begin(&server);
@@ -298,7 +309,7 @@ void blink(void) {
 
 void poll_hx711(void) {
     if (hx711.update()) {
-        if (delay_elapsed(&last_hx711_poll_millis, HX711_POLL_INTERVAL)) {
+        if (delay_elapsed(&last_weight_poll_millis, HX711_POLL_INTERVAL)) {
 
             if (tare || calibrate) {
                 // Reset the timer
@@ -311,6 +322,15 @@ void poll_hx711(void) {
 
             if (hx711.getTareStatus()) {
                 serial_printf("tare complete\n");
+
+                // Clear out the averages
+                weight_ema_1 = 0.0;
+                weight_ema_2 = 0.0;
+                weight_ema_3 = 0.0;
+                weight_ema_4 = 0.0;
+
+                // Make sure the timer isn't running
+                reset_timer();
 
                 ws_server.textAll("{ \"tare\": true }");
             }
@@ -334,40 +354,60 @@ void poll_hx711(void) {
                 calibrate = false;
             }
 
-            float new_weight = hx711.getData();
+            weight_new = hx711.getData();
 
             // ema 1 is just a gentle smoothing to remove noise/drips/etc
-            weight_ema_1 += (new_weight - weight_ema_1) * WEIGHT_EMA_FACTOR_1;
-            last_hx711_value = weight_ema_1;
+            weight_ema_1 += (weight_new - weight_ema_1) * WEIGHT_EMA_FACTOR_1;
 
-            // ema 2 and 3 are used to detect if there is
+            // ema 2 and 3 are used to detect if there is a changing weight
             weight_ema_2 += (weight_ema_1 - weight_ema_2) * WEIGHT_EMA_FACTOR_2;
             weight_ema_3 += (weight_ema_1 - weight_ema_3) * WEIGHT_EMA_FACTOR_3;
 
-            float delta = abs(weight_ema_2 - weight_ema_3);
-            bool change = delta > WEIGHT_HYSTERESIS;
-            bool start = delta > WEIGHT_START_DELTA;
+            // ema 4 is the source for the weight_start value
+            weight_ema_4 += (weight_ema_1 - weight_ema_4) * WEIGHT_EMA_FACTOR_4;
 
-            log_d("delta: %f, timer_running: %s, change: %s, start: %s", delta, timer_running ? "true" : "false", change ? "true" : "false", start ? "true" : "false" );
-            //int t = digitalRead(PIN_TARE);
-            //int c = digitalRead(PIN_CAL);
-            //log_d("tare: %s, cal: %s", t?"true":"false", c?"true":"false");
+            // Only detect increasing weight for starting
+            bool start = weight_ema_2 > (weight_ema_3 + WEIGHT_START_DELTA);
+            // But any change thereafter should keep the run going (the weight
+            // tends to bounce a bit as drips land and cause the scale to wobble)
+            bool change = abs(weight_ema_2 - weight_ema_3) > WEIGHT_HYSTERESIS;
 
             if (!timer_running && start) {
                 reset_timer();
                 timer_running = true;
+                weight_peak = 0.0;
+
+                // More fudging required here perhaps?
+                weight_start = weight_ema_4;
             }
 
             if (timer_running) {
                 if (change) {
                     weight_last_change_time = elapsed_seconds;
+                    if (weight_ema_1 > weight_peak) {
+                        weight_peak = weight_ema_1;
+                    }
                 } else if (elapsed_seconds - weight_last_change_time > WEIGHT_IDLE_TIMEOUT) {
                     timer_running = false;
+
+                    char buf[SERIAL_BUF_LEN];
+                    format(buf, SERIAL_BUF_LEN,
+                        "{ \"total_time\": %.1f, \"weight\": %.3f, \"weight_peak\": %.3f, \"weight_start\": %.3f }",
+                        weight_last_change_time,
+                        weight_ema_1,
+                        weight_peak,
+                        weight_start
+                    );
+
+                    // Skip the slow updating in case a new weight starts imminently
+                    weight_ema_4 = weight_ema_1;
+
+                    ws_server.textAll(buf);
                 }
             }
 
             send_websocket_measurement(measurement {
-                weight: last_hx711_value,
+                weight: weight_ema_1,
                 time: elapsed_seconds,
                 timer_running: timer_running,
                 ema2: weight_ema_2,
@@ -411,7 +451,7 @@ void poll_wifi_status(void) {
 
 void update_serial(void) {
     if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
-        serial_printf("Time: %.1f   Weight: %.1f\n", elapsed_seconds, last_hx711_value);
+        serial_printf("Time: %.1f   Weight: %.1f\n", elapsed_seconds, weight_ema_1);
     }
 }
 
@@ -463,6 +503,18 @@ void save_cal_to_eeprom(float cal) {
     EEPROM.commit();
 }
 
+bool is_command(const char* command, char* data) {
+    size_t len = strlen(command);
+    bool same = strncmp(command, data, len) == 0;
+    // serial_printf("Comparing first %d chars of '%s' and '%s' = %s\n",
+    //     len,
+    //     command,
+    //     data,
+    //     same? "true" : "false"
+    // );
+    return same;
+}
+
 void on_websocket_event(
     AsyncWebSocket * server,
     AsyncWebSocketClient * client,
@@ -483,11 +535,10 @@ void on_websocket_event(
     } else if (type == WS_EVT_DATA) {
         serial_printf("WS (id: %u) DATA: %s\n", id, len > 0 ? (char*) data: "");
 
-        char* msg = (char*)data;
-        if (strcmp(msg, cal_command) == 0) {
+        if (is_command(cal_command, (char*)data)) {
             serial_printf("WS (id: %u) requested CALIBRATION\n", id);
             calibrate = true;
-        } else if (strcmp(msg, tare_command) == 0) {
+        } else if (is_command(tare_command, (char*)data)) {
             serial_printf("WS (id: %u) requested TARE\n", id);
             tare = true;
         }

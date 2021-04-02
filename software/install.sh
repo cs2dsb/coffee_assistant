@@ -26,15 +26,15 @@ source ./env.sh 2>/dev/null
 # Drop cached creds if there are any
 sudo -k
 
-# # Try and sudo without password
-# if sudo -n whoami &>/dev/null; then
-#     echo "Passwordless sudo is enabled. Running random installation scripts not recommended..." 1>&2
-#     exit 1
-# fi
+# Try and sudo without password
+if sudo -n whoami &>/dev/null; then
+    echo "Passwordless sudo is enabled. Running random installation scripts not recommended..." 1>&2
+    exit 1
+fi
 
 # Install arduino-cli
 A_CLI=third_party/arduino-cli/arduino-cli
-if ! test -s $A_CLI &>/dev/null; then
+if ! test -s $A_CLI; then
     mkdir -p third_party/arduino-cli
     cd third_party/arduino-cli
 
@@ -51,7 +51,7 @@ if ! test -s $A_CLI &>/dev/null; then
 fi
 
 BROTLI=third_party/brotli/brotli
-if ! test -s $BROTLI &>/dev/null; then
+if ! test -s $BROTLI; then
     mkdir -p third_party/brotli
     cd third_party/brotli
 
@@ -71,7 +71,7 @@ fi
 
 
 ZOPFIL=third_party/zopfli/zopfli
-if ! test -s $ZOPFIL &>/dev/null; then
+if ! test -s $ZOPFIL; then
     mkdir -p third_party/zopfli
     cd third_party/zopfli
 
@@ -90,7 +90,7 @@ if ! test -s $ZOPFIL &>/dev/null; then
 fi
 
 MKLITTLEFS=third_party/mklittlefs/mklittlefs
-if ! test -s $MKLITTLEFS &>/dev/null; then
+if ! test -s $MKLITTLEFS; then
     mkdir -p third_party/mklittlefs/littlefs
     cd third_party/mklittlefs
 
@@ -115,6 +115,15 @@ if ! test -s $MKLITTLEFS &>/dev/null; then
     rm mklittlefs.tar.gz
     make
     cd ../..
+fi
+
+NODEJS=third_party/nodejs/bin/node
+if ! test -s $NODEJS; then
+    mkdir -p third_party/nodejs
+    cd third_party/nodejs
+    wget -q -O nodejs.tar.xz https://nodejs.org/dist/v14.16.0/node-v14.16.0-linux-x64.tar.xz
+    tar --strip-components=1 -xf nodejs.tar.xz
+    rm nodejs.tar.xz
 fi
 
 # OPENJDK=third_party/openjdk/bin

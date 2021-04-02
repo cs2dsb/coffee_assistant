@@ -9,6 +9,7 @@ set -o nounset
 # Exit when a piped command returns a non-zero exit code
 set -o pipefail
 
+
 PROJECT="${PROJECT:-${1:-skeleton}}"
 FLASH="${FLASH:-false}"
 TEST_HOST="${OTA_HOST:-esp32.local}"
@@ -27,7 +28,7 @@ if [ "$FQBN" == "" ]; then
 fi
 
 # spiffs is first because it doesn't trigger a restart if it's done OTA
-./spiffs.sh
+./spiffs.sh "$PROJECT"
 
 cat > credentials.h <<- EOF
 #define PROJECT         "${PROJECT}"

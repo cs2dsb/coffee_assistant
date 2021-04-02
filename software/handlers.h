@@ -24,7 +24,15 @@ const char* const HTTP_NAMES[] PROGMEM  = {
     HTTP_OPTIONS_NAME,
 };
 
-AsyncCallbackWebHandler& register_fs_handler(AsyncWebServer *server, const char* uri, WebRequestMethodComposite method, const char* content_type, const char* content_encoding, const char* fs_path) {
+AsyncCallbackWebHandler& register_fs_handler(
+    AsyncWebServer *server,
+    const char* uri,
+    WebRequestMethodComposite method,
+    const char* content_type,
+    const char* content_encoding,
+    const char* content_disposition,
+    const char* fs_path
+) {
     const char* method_name = HTTP_ANY_NAME;
     if (method < HTTP_ANY) {
         method_name = HTTP_NAMES[method - 1];
@@ -37,6 +45,8 @@ AsyncCallbackWebHandler& register_fs_handler(AsyncWebServer *server, const char*
         if (SPIFFS.exists(fs_path)) {
             response = request->beginResponse(SPIFFS, fs_path, content_type);
             response->addHeader("Content-Encoding", content_encoding);
+            // Can't do this because async response adds a duplicate which is invalid
+            // response->addHeader("Content-Disposition", content_disposition);
         } else {
             //TODO: better error?
             code = 404;
