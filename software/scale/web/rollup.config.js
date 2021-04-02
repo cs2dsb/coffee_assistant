@@ -3,6 +3,9 @@ import babel from '@rollup/plugin-babel';
 import typescript from 'rollup-plugin-typescript2';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
+import import_url from 'postcss-import-url';
+import font_grabber from 'postcss-font-grabber';
+import autoprefixer from 'autoprefixer';
 import resolve from '@rollup/plugin-node-resolve';
 import url from '@rollup/plugin-url';
 import svgr from '@svgr/rollup';
@@ -12,36 +15,44 @@ import eslint from '@rollup/plugin-eslint';
 import copy from 'rollup-plugin-copy'
 import pkg from './package.json';
 
-const is_prod = process.env.NODE_ENV == "production";
+import path from 'path';
+
+const is_prod = process.env.NODE_ENV == 'production';
 const NODE_ENV = is_prod ? "\'production\'" : "\'development\'";
+const fonts_dir = path.resolve('dist/fonts');
+const html_dir = path.resolve('dist/html');
 
 export default {
   input: ['src/js/index.tsx'],
-  output: [
-    {
-      sourcemap: true,
-      dir: 'dist/js',
-      format: 'esm',
-    },
-  ],
+  output: [{
+    sourcemap: true,
+    dir: 'dist/js',
+    format: 'esm',
+  }],
   plugins: [
     eslint(),
     copy({
       targets: [
         { src: 'src/favicon.ico', dest: 'dist' },
         { src: 'src/html/*.html', dest: 'dist/html' },
-    ]}),
+      ],
+    }),
     replace({
-       "process.env.NODE_ENV": NODE_ENV,
+       'process.env.NODE_ENV': NODE_ENV,
        preventAssignment: true,
     }),
     postcss({
-      plugins: [],
+      plugins: [
+        //Fetches any css in @import calls and inlines it
+        import_url({ modernBrowser: true }),
+        font_grabber({
+          fontDest: fonts_dir,
+          cssDest: html_dir,
+        }),
+        autoprefixer(),
+      ],
       minimize: true,
     }),
-    // external({
-    //   includeDependencies: true,
-    // }),
     typescript({
       typescript: require('typescript'),
       include: ['*.js+(|x)', '**/*.js+(|x)'],
@@ -54,15 +65,7 @@ export default {
     }),
     url(),
     svgr(),
-    resolve({
-      browser: true,
-      //modulesOnly: true,
-      //Force deduping these. Dupes break react.
-      //dedupe: [ 'react', 'react-dom' ],
-      // moduleDirectories: [
-      //   'src',
-      // ],
-    }),
+    resolve({ browser: true }),
     commonjs(),
     is_prod && terser(),
   ],
