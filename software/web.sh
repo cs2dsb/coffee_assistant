@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Only run one at a time
+[ "${FLOCKER}" != "$0" ] && exec env FLOCKER="$0" flock -e "$0" "$0" "$@" || :
+
 # Exit when any command fails
 set -o errexit
 
@@ -10,6 +13,7 @@ set -o nounset
 set -o pipefail
 
 PROJECT="${1:-skeleton}"
+WATCH="${WATCH:-false}"
 
 source ./env.sh 2>/dev/null
 
@@ -33,7 +37,12 @@ if test -d "$WEB"; then
     fi
 
     npx yarn install
-    npx yarn build
+
+    if [ "$WATCH" == "true" ]; then
+        npx yarn build:watch
+    else
+        npx yarn build
+    fi
 
     cd ../..
 fi

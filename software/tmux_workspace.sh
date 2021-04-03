@@ -25,9 +25,10 @@ fi
 SHELL="`get-shell`"
 echo $SHELL
 
-if has-session $SESSION_NAME ; then
+if has-session $SESSION_NAME; then
 	echo "Session $SESSION_NAME already exists"
 else
+
         echo "Creating new session $SESSION_NAME"
         tmux new-session -d -s $SESSION_NAME -n $SESSION_NAME
         tmux split-window -h
@@ -53,13 +54,13 @@ else
         tmux send-keys -t $SESSION_NAME.1 "dmesg -w" Enter Enter
         sleep 0.1
 
-        tmux send-keys -t $SESSION_NAME.2 "" Enter Enter
+        tmux send-keys -t $SESSION_NAME.2 "cd scale; sleep 10; ./watch_web.sh" Enter Enter
         sleep 0.1
 
         tmux send-keys -t $SESSION_NAME.3 "" Enter Enter
         sleep 0.1
 
-        tmux send-keys -t $SESSION_NAME.4 "FLASH=true MONITOR=true ./watch.sh skeleton" Enter Enter
+        tmux send-keys -t $SESSION_NAME.4 "cd scale; FLASH=true MONITOR=true ./watch.sh" Enter Enter
         sleep 0.1
 fi
 

@@ -62,7 +62,7 @@
 #define WEIGHT_CHANGE_THRESHOLD         0.3
 #define KNOWN_CALIBRATION_MASS_DEFAULT  100.0
 #define WEIGHT_HYSTERESIS               0.1
-#define WEIGHT_START_DELTA              0.3
+#define WEIGHT_START_DELTA              0.2
 #define WEIGHT_EMA_FACTOR_1             0.95
 #define WEIGHT_EMA_FACTOR_2             0.9
 #define WEIGHT_EMA_FACTOR_3             0.6
