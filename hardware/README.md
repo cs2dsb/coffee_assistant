@@ -1,28 +1,64 @@
 # coffee_assistant/hardware
 
-## notes
-*   Voltage supervisor
+## mcu
 
-## nrf52
+Base mcu module for other assemblies
 
-A bluetooth module based around an nrf52840 designed to be connected to the other functional
-modules in this project. Includes USB for power, updating and communication.
+### features
+*   ESP32 module
+*   USB for power, flashing and communication
+*   Battery operation & charging
+*   Castellation + breadboard friendly pitch
+
+### todo
+*   Power path & voltage supervisor
+*   Fuel guage
+*   Battery charging
+*   Battery protection
 
 ## load_cell
 
-A load cell module based around the hx711 adc with integrated amp designed to read weight
-from up to two load cells. Also provides the user interface for the whole system and performs
-control functions for the other node(s).
+Requires mcu module
 
-Requires nrf52 module.
+### features
+*   Control node
+*   HX711 ADC to read load cell(s)
+*   User interface
+    *   Display
+        *   Weight
+        *   Time
+        *   State
+        *   Grind setting
+        *   Advice
+    *   Web
+        *   Everything from `display`
+        *   Manage bean inventory
+        *   Store and read extraction history (browser local storage?)
+    *   Cap sense buttons
+        *   Tare
+        *   Calibrate
+        *   Select beans
+        *   Start/stop
+    *   Sound
+        *   Buzzer to assist with bean weighing?
+
+### todo
+*   Load cell physical mounting
+*   Waterproofing?
+    *   Would a 2 board sandwitch with the electronics on the underside
+        of the top PCB be sufficiently waterproof?
 
 ## coffee_machine_interface
 
-A module designed to attach to a coffee machine to:
+Requires mcu module
 
-*   Trigger the functions of the machine via mosfet or ssr output
-*   Monitor the temperature of the machine via thermocouple
+### features
+*   Puppet node
+*   Trigger coffee machine buttons via SSR/mosfet
+*   Monitor temperature via NTC (on board) and thermocouple
+*   Mains or 24v operation
+*   Can shut off at approximately the right time based off the previous best
+    guess given by the control node in case of a loss of communication
 
-Can be powered from mains or up to 24v dc.
-
-Requires nrf52 module.
+### todo
+*   Default cutoff time in case of loss of signal

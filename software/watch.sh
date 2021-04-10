@@ -20,7 +20,12 @@ TTY_BAUD=${TTY_BAUD:-115200}
 
 MONITOR_JOB=""
 
-trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
+cleanup() {
+    local pids=$(jobs -pr)
+    [ -n "$pids" ] && kill $pids
+}
+
+trap "trap - SIGTERM && cleanup" SIGINT SIGTERM EXIT
 
 # Delete the old spiffs to force it to transfer them if we ctrl-c'd out previously
 rm -rf "$PROJECT/build/spiffs" "$PROJECT/build/spiffs.old"

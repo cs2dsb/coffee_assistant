@@ -81,7 +81,6 @@ fi
 
 ./web.sh "$PROJECT"
 
-
 if test -d "$STATIC"; then
     #BROTLI=./third_party/brotli/brotli
     ZOPFLI=./third_party/zopfli/zopfli
@@ -120,6 +119,10 @@ EOF
         "$STATIC" \
         "$WEB/dist"
     do
+        if ! test -d "$path"; then
+            continue;
+        fi
+
         readarray -d '' FILES < <(cd "$path"; find -L . -type f \( \
                -name \*.js   \
             -o -name \*.html \
@@ -207,64 +210,66 @@ if test -d "$SPIFFS_DIR_OLD"; then
     set -o errexit
 fi
 
+if test -d "$SPIFFS_DIR"; then
+    echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Packing SPIFFS\n$(tput sgr0)"
 
-echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Packing SPIFFS\n$(tput sgr0)"
-
-PARTITIONS="${PROJECT}/build/partitions.csv"
-# There's a chicken and egg problem with build vs. spiffs so just default to
-# a reasonable size if the partitions file isn't in the build folder
-if test -s "$PARTITIONS"; then
-    SPIFFS_SIZE=${SPIFFS_SIZE:-`cat $PARTITIONS | grep spiffs | cut -d',' -f5`}
-else
-    SPIFFS_SIZE=${SPIFFS_SIZE:-0x170000}
-fi
-SPIFFS_OFFSET=`cat "${PROJECT}/build/partitions.csv" | grep spiffs | cut -d',' -f4`
-#MKSPIFFS="`find .arduino15 -name mkspiffs -type f | head -n 1`"
-MKSPIFFS=./third_party/mklittlefs/mklittlefs
-ESPTOOL="`find .arduino15 -name esptool.py -type f | head -n 1`"
-
-"$MKSPIFFS" -c "$SPIFFS_DIR" -b 4096 -p 256 -s $SPIFFS_SIZE "$SPIFFS_BIN"
-
-if [ "$SPIFFS_DIFF" == "true" ] || [ "$FORCE" == "true" ]; then
-    SERIAL_PORT=""
-    if [ "$FLASH" == "true" ]; then
-        set +o errexit
-        SERIAL_PORT=`./find_port.sh`
-        set -o errexit
+    PARTITIONS="${PROJECT}/build/partitions.csv"
+    # There's a chicken and egg problem with build vs. spiffs so just default to
+    # a reasonable size if the partitions file isn't in the build folder
+    if test -s "$PARTITIONS"; then
+        SPIFFS_SIZE=${SPIFFS_SIZE:-`cat "$PARTITIONS" | grep spiffs | cut -d',' -f5`}
+        SPIFFS_OFFSET=${SPIFFS_OFFSET:-`cat "$PARTITIONS" | grep spiffs | cut -d',' -f4`}
+    else
+        SPIFFS_SIZE=${SPIFFS_SIZE:-0x170000}
+        SPIFFS_OFFSET=${SPIFFS_OFFSET:-0x290000}
     fi
+    #MKSPIFFS="`find .arduino15 -name mkspiffs -type f | head -n 1`"
+    MKSPIFFS=./third_party/mklittlefs/mklittlefs
+    ESPTOOL="`find .arduino15 -name esptool.py -type f | head -n 1`"
 
-    if [ "$FLASH" == "true" ] && [ "$SERIAL_PORT" != "" ]; then
-        echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Flashing SPIFFS\n$(tput sgr0)"
+    "$MKSPIFFS" -c "$SPIFFS_DIR" -b 4096 -p 256 -s $SPIFFS_SIZE "$SPIFFS_BIN"
 
-        "$ESPTOOL" \
-            --chip esp32 \
-            --port "$SERIAL_PORT" \
-            --baud 921600 \
-            write_flash \
-            -z $SPIFFS_OFFSET \
-            "$SPIFFS_BIN"
-
-        if [ "$?" == "0" ]; then
-            echo -e "$(tput setaf 0)$(tput setab 2)\n\n  SPIFFS succeeded \n$(tput sgr0)"
-        else
-            echo -e "$(tput setaf 0)$(tput setab 1)\n\n  SPIFFS failed \n$(tput sgr0)"
+    if [ "$SPIFFS_DIFF" == "true" ] || [ "$FORCE" == "true" ]; then
+        SERIAL_PORT=""
+        if [ "$FLASH" == "true" ]; then
+            set +o errexit
+            SERIAL_PORT=`./find_port.sh`
+            set -o errexit
         fi
-    elif [ "$OTA_HOST" != "" ]; then
-        echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Uploading SPIFFS OTA \n$(tput sgr0)"
 
-        BIN_FILE="$SPIFFS_BIN"
-        MD5=`md5sum "$BIN_FILE" | cut -d' ' -f1`
-        curl \
-            --progress-bar \
-            -o /dev/null \
-            -F MD5="$MD5" \
-            -F firmware="@$BIN_FILE; filename=filesystem" \
-            http://$OTA_HOST/update
+        if [ "$FLASH" == "true" ] && [ "$SERIAL_PORT" != "" ]; then
+            echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Flashing SPIFFS\n$(tput sgr0)"
 
-        if [ "$?" == "0" ]; then
-            echo -e "$(tput setaf 0)$(tput setab 2)\n\n  OTA succeeded \n$(tput sgr0)"
-        else
-            echo -e "$(tput setaf 0)$(tput setab 1)\n\n  OTA failed \n$(tput sgr0)"
+            "$ESPTOOL" \
+                --chip esp32 \
+                --port "$SERIAL_PORT" \
+                --baud 921600 \
+                write_flash \
+                -z $SPIFFS_OFFSET \
+                "$SPIFFS_BIN"
+
+            if [ "$?" == "0" ]; then
+                echo -e "$(tput setaf 0)$(tput setab 2)\n\n  SPIFFS succeeded \n$(tput sgr0)"
+            else
+                echo -e "$(tput setaf 0)$(tput setab 1)\n\n  SPIFFS failed \n$(tput sgr0)"
+            fi
+        elif [ "$OTA_HOST" != "" ]; then
+            echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Uploading SPIFFS OTA \n$(tput sgr0)"
+
+            BIN_FILE="$SPIFFS_BIN"
+            MD5=`md5sum "$BIN_FILE" | cut -d' ' -f1`
+            curl \
+                --progress-bar \
+                -o /dev/null \
+                -F MD5="$MD5" \
+                -F firmware="@$BIN_FILE; filename=filesystem" \
+                http://$OTA_HOST/update
+
+            if [ "$?" == "0" ]; then
+                echo -e "$(tput setaf 0)$(tput setab 2)\n\n  OTA succeeded \n$(tput sgr0)"
+            else
+                echo -e "$(tput setaf 0)$(tput setab 1)\n\n  OTA failed \n$(tput sgr0)"
+            fi
         fi
     fi
 fi

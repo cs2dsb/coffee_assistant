@@ -19,6 +19,7 @@ GIT_LIBRARIES=(
     "gavinlyonsrepo/TM1638plus"
     "olkal/HX711_ADC"
     "lorol/LITTLEFS"
+    "knolleary/pubsubclient"
 )
 
 source ./env.sh 2>/dev/null
@@ -68,8 +69,6 @@ if ! test -s $BROTLI; then
     cd ../..
 fi
 
-
-
 ZOPFIL=third_party/zopfli/zopfli
 if ! test -s $ZOPFIL; then
     mkdir -p third_party/zopfli
@@ -88,6 +87,23 @@ if ! test -s $ZOPFIL; then
 
     cd ../..
 fi
+
+# MOSQUITTO=third_party/eclipse/mosquitto
+# if ! test -s $MOSQUITTO; then
+#     mkdir -p third_party/eclipse
+#     cd third_party/eclipse
+
+#     curl -sL https://api.github.com/repos/eclipse/mosquitto/tags \
+#         | jq '.[0].tarball_url' \
+#         | tr -d \" \
+#         | wget -q -O mosquitto.tar.gz -i -
+#     tar --strip-components=1 -xf mosquitto.tar.gz
+#     rm mosquitto.tar.gz
+
+#     make
+
+#     cd ../..
+# fi
 
 MKLITTLEFS=third_party/mklittlefs/mklittlefs
 if ! test -s $MKLITTLEFS; then
