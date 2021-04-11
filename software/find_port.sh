@@ -9,6 +9,11 @@ set -o nounset
 # Exit when a piped command returns a non-zero exit code
 set -o pipefail
 
+if [ "${TTY_OVERRIDE:-}" != "" ]; then
+    echo "$TTY_OVERRIDE"
+    exit 0
+fi
+
 source ./env.sh 2>/dev/null
 
 mapfile -d $'\0' TTYS < <(find /dev/serial/by-id/ -name "${TTY_PATTERN}" -print0)

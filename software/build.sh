@@ -37,6 +37,8 @@ cat > credentials.h <<- EOF
 #define MDNS_HOST       "${WIFI_HOST:-esp32}"
 #define WIFI_SSID       "${WIFI_SSID:-}"
 #define WIFI_PASSWORD   "${WIFI_PASSWORD:-}"
+#define MQTT_IP         ${MQTT_IP:-0,0,0,0}
+#define MQTT_PORT         ${MQTT_PORT:-1883}
 EOF
 
 A_CLI=third_party/arduino-cli/arduino-cli

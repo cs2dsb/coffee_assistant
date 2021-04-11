@@ -10,7 +10,7 @@ if ! command -v inotifywait >/dev/null 2>&1; then
 fi
 
 PROJECT="${1:-skeleton}"
-FILES="${FILES:-$PROJECT third_party build.sh .env .env_shared arduino-cli.yml *.h}"
+FILES="${FILES:-$PROJECT third_party build.sh .env .env_shared arduino-cli.yml utils.h handlers.h}"
 FLASH="${FLASH:-false}"
 MONITOR="${MONITOR:-false}"
 

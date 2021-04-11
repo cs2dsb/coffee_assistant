@@ -12,12 +12,12 @@ int format(char* buf, int len, const char *fmt, ...) {
 }
 
 void serial_printf(const char *fmt, ...) {
-  char buf[SERIAL_BUF_LEN];
-  va_list pargs;
-  va_start(pargs, fmt);
-  vsnprintf(buf, SERIAL_BUF_LEN, fmt, pargs);
-  va_end(pargs);
-  Serial.print(buf);
+    char buf[SERIAL_BUF_LEN];
+    va_list pargs;
+    va_start(pargs, fmt);
+    vsnprintf(buf, SERIAL_BUF_LEN, fmt, pargs);
+    va_end(pargs);
+    Serial.print(buf);
 }
 
 bool delay_elapsed(unsigned long *last, unsigned long interval) {
@@ -32,8 +32,35 @@ bool delay_elapsed(unsigned long *last, unsigned long interval) {
 }
 
 void fatal() {
+    delay(10000);
     serial_printf("FATAL: Restarting...\n");
     ESP.restart();
+}
+
+void format_mac(const uint8_t *mac, char *buf, int len) {
+    format(buf, len,
+        "%02x:%02x:%02x:%02x:%02x:%02x",
+        mac[0], mac[1], mac[2],
+        mac[3], mac[4], mac[5]
+    );
+}
+
+void print_esp_now_result(esp_err_t result, char *prefix) {
+    if (result == ESP_OK) {
+        serial_printf("%s: success\n", prefix);
+    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
+        serial_printf("%s: espnow not init\n", prefix);
+    } else if (result == ESP_ERR_ESPNOW_ARG) {
+        serial_printf("%s: invalid argument\n", prefix);
+    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
+        serial_printf("%s: internal error\n", prefix);
+    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
+        serial_printf("%s: no mem\n", prefix);
+    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
+        serial_printf("%s: peer not found\n", prefix);
+    } else {
+        serial_printf("%s: unknown error %d\n", prefix, result);
+    }
 }
 
 #endif
