@@ -1,7 +1,21 @@
+#include <EEPROM.h>
+
 #ifndef __UTILS__
 #define __UTILS__
 
 #define SERIAL_BUF_LEN 255
+
+// EEPROM is actually emulated using a flash 'partition' that's bigger than 512
+#define EEPROM_SIZE                     512
+
+// This address + magic value is used to determine if the contents of the EEPROM
+// has been set by the app or if it's random junk
+#define EEPROM_VALID_ADDR               0
+#define EEPROM_VALID_VALUE              0xCAFEBEEF
+
+#define EEPROM_FIRST_ADDR               (EEPROM_VALID_ADDR + sizeof(unsigned))
+
+bool __utils_eeprom_init = false;
 
 int format(char* buf, int len, const char *fmt, ...) {
     va_list pargs;
@@ -60,6 +74,55 @@ void print_esp_now_result(esp_err_t result, char *prefix) {
         serial_printf("%s: peer not found\n", prefix);
     } else {
         serial_printf("%s: unknown error %d\n", prefix, result);
+    }
+}
+
+void setup_eeprom(void) {
+    if (!__utils_eeprom_init) {
+        __utils_eeprom_init = true;
+        EEPROM.begin(EEPROM_SIZE);
+    }
+}
+
+bool is_eeprom_valid(void) {
+    setup_eeprom();
+
+    unsigned is_valid = 0;
+    EEPROM.get(EEPROM_VALID_ADDR, is_valid);
+
+    return is_valid == EEPROM_VALID_VALUE;
+}
+
+void wipe_eeprom(void) {
+    setup_eeprom();
+
+    unsigned valid = 0;
+    EEPROM.put(EEPROM_VALID_ADDR, valid);
+    EEPROM.commit();
+}
+
+template<typename T>
+bool read_from_eeprom(int addr, T &out) {
+    setup_eeprom();
+
+    if (is_eeprom_valid()) {
+        EEPROM.get(addr, out);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+template<typename T>
+void write_to_eeprom(int addr, const T &value, bool commit = true) {
+    setup_eeprom();
+
+    EEPROM.put(addr, value);
+
+    if (commit) {
+        unsigned valid = EEPROM_VALID_VALUE;
+        EEPROM.put(EEPROM_VALID_ADDR, valid);
+        EEPROM.commit();
     }
 }
 
