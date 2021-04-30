@@ -10,7 +10,7 @@ set -o nounset
 set -o pipefail
 
 RENAME=`realpath "${BASH_SOURCE%/*}/kicad_custom/rename_gbrs.sh"`
-PROJECTS=(a b c)
+PROJECTS=(mcu)
 
 for t in ${PROJECTS[@]}; do
     WD="${BASH_SOURCE%/*}/$t"

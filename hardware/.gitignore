@@ -26,7 +26,10 @@ fp-info-cache
 
 # Exported BOM files
 *.xml
-# (want the final "print" dir in git so it's easy to order) *.csv
+*.csv
+
+*/print/*
+!*/print/*.sh
 
 custom.dcm
 

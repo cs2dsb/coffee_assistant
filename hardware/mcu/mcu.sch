@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 1 1
+Sheet 1 2
 Title ""
 Date ""
 Rev ""
@@ -21,134 +21,136 @@ F 0 "J1" H 9200 4600 50  0000 C CNN
 F 1 "TYPE-C-31-M-12" H 8800 6100 50  0000 C CNN
 F 2 "custom:TYPE-C-31-M-12" H 9000 5350 50  0001 C CNN
 F 3 "https://www.usb.org/sites/default/files/documents/usb_type-c.zip" H 9000 5350 50  0001 C CNN
+F 4 "C165948" H 8850 5350 50  0001 C CNN "LCSC Part Number"
+F 5 "TYPE-C-31-M-12" H 8850 5350 50  0001 C CNN "Part Number"
 	1    8850 5350
 	1    0    0    -1  
 $EndComp
 $Comp
 L Connector_Generic:Conn_01x11 J2
 U 1 1 606B33C2
-P -4300 5600
-F 0 "J2" H -4220 5592 50  0000 L CNN
-F 1 "Conn_01x11" H -4220 5501 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x11_P2.54mm_Vertical" H -4300 5600 50  0001 C CNN
-F 3 "~" H -4300 5600 50  0001 C CNN
-	1    -4300 5600
+P 8200 3150
+F 0 "J2" H 8150 2550 50  0000 L CNN
+F 1 "Conn_01x11" H 7950 2450 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x11_P2.54mm_Vertical" H 8200 3150 50  0001 C CNN
+F 3 "~" H 8200 3150 50  0001 C CNN
+	1    8200 3150
 	1    0    0    -1  
 $EndComp
 $Comp
 L Connector_Generic:Conn_01x11 J3
 U 1 1 606B6030
-P -3450 5600
-F 0 "J3" H -3370 5592 50  0000 L CNN
-F 1 "Conn_01x11" H -3370 5501 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x11_P2.54mm_Vertical" H -3450 5600 50  0001 C CNN
-F 3 "~" H -3450 5600 50  0001 C CNN
-	1    -3450 5600
+P 9350 3150
+F 0 "J3" H 9300 2550 50  0000 L CNN
+F 1 "Conn_01x11" H 9100 2450 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x11_P2.54mm_Vertical" H 9350 3150 50  0001 C CNN
+F 3 "~" H 9350 3150 50  0001 C CNN
+	1    9350 3150
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:Antenna_Shield AE1
 U 1 1 606C06E3
-P -2350 -100
-F 0 "AE1" H -2206 -61 50  0000 L CNN
-F 1 "Antenna_Shield" H -2206 -152 50  0000 L CNN
-F 2 "custom:Texas_SWRA117D_2.4GHz_Right" H -2350 0   50  0001 C CNN
-F 3 "~" H -2350 0   50  0001 C CNN
-	1    -2350 -100
+P 6800 2050
+F 0 "AE1" H 6944 2089 50  0000 L CNN
+F 1 "Antenna_Shield" H 6944 1998 50  0000 L CNN
+F 2 "custom:Texas_SWRA117D_2.4GHz_Right" H 6800 2150 50  0001 C CNN
+F 3 "~" H 6800 2150 50  0001 C CNN
+	1    6800 2050
 	1    0    0    -1  
 $EndComp
-Text Label -2400 550  0    50   ~ 0
+Text Label 6750 2700 0    50   ~ 0
 io0
-Text Label -2400 750  0    50   ~ 0
+Text Label 6750 2900 0    50   ~ 0
 io2
-Text Label -2400 950  0    50   ~ 0
+Text Label 6750 3100 0    50   ~ 0
 io4
-Text Label -2400 1050 0    50   ~ 0
+Text Label 6750 3200 0    50   ~ 0
 io5
-Text Label -2400 1150 0    50   ~ 0
+Text Label 6750 3300 0    50   ~ 0
 sd2_io9
-Text Label -2400 1250 0    50   ~ 0
+Text Label 6750 3400 0    50   ~ 0
 sd3_io10
-Text Label -2400 1350 0    50   ~ 0
+Text Label 6750 3500 0    50   ~ 0
 io12
-Text Label -2400 1450 0    50   ~ 0
+Text Label 6750 3600 0    50   ~ 0
 io13
-Text Label -2400 1550 0    50   ~ 0
+Text Label 6750 3700 0    50   ~ 0
 io14
-Text Label -2400 1650 0    50   ~ 0
+Text Label 6750 3800 0    50   ~ 0
 io15
-Text Label -2400 1750 0    50   ~ 0
+Text Label 6750 3900 0    50   ~ 0
 io18
-Text Label -2400 1850 0    50   ~ 0
+Text Label 6750 4000 0    50   ~ 0
 io19
-Text Label -2400 1950 0    50   ~ 0
+Text Label 6750 4100 0    50   ~ 0
 io21
-Text Label -2400 2050 0    50   ~ 0
+Text Label 6750 4200 0    50   ~ 0
 io22
-Text Label -2400 2150 0    50   ~ 0
+Text Label 6750 4300 0    50   ~ 0
 io23
-Text Label -2400 2250 0    50   ~ 0
+Text Label 6750 4400 0    50   ~ 0
 io25
-Text Label -2400 2350 0    50   ~ 0
+Text Label 6750 4500 0    50   ~ 0
 io26
-Text Label -2400 2450 0    50   ~ 0
+Text Label 6750 4600 0    50   ~ 0
 io27
-Text Label -2400 2550 0    50   ~ 0
+Text Label 6750 4700 0    50   ~ 0
 io32
-Text Label -2400 2650 0    50   ~ 0
+Text Label 6750 4800 0    50   ~ 0
 io33
-Text Label -2400 2750 0    50   ~ 0
+Text Label 6750 4900 0    50   ~ 0
 io34
-Text Label -2400 2850 0    50   ~ 0
+Text Label 6750 5000 0    50   ~ 0
 io35
-Text Label -4000 1750 2    50   ~ 0
+Text Label 5150 3900 2    50   ~ 0
 io16
-Text Label -4000 1850 2    50   ~ 0
+Text Label 5150 4000 2    50   ~ 0
 io17
-Text Label -4000 1950 2    50   ~ 0
+Text Label 5150 4100 2    50   ~ 0
 sd0
-Text Label -4000 2050 2    50   ~ 0
+Text Label 5150 4200 2    50   ~ 0
 sd1
-Text Label -4000 2150 2    50   ~ 0
+Text Label 5150 4300 2    50   ~ 0
 clk
-Text Label -4000 2250 2    50   ~ 0
+Text Label 5150 4400 2    50   ~ 0
 cmd
-Text Label -4000 550  2    50   ~ 0
+Text Label 5150 2700 2    50   ~ 0
 sensor_vp
-Text Label -4000 650  2    50   ~ 0
+Text Label 5150 2800 2    50   ~ 0
 sensor_capp
-Text Label -4000 750  2    50   ~ 0
+Text Label 5150 2900 2    50   ~ 0
 sensor_capn
-Text Label -4000 850  2    50   ~ 0
+Text Label 5150 3000 2    50   ~ 0
 sensor_vn
-Text Label -4000 350  2    50   ~ 0
+Text Label 5150 2500 2    50   ~ 0
 en
 $Comp
 L power:GND #PWR0103
 U 1 1 606F436F
-P -2250 100
-F 0 "#PWR0103" H -2250 -150 50  0001 C CNN
-F 1 "GND" H -2100 50  50  0000 C CNN
-F 2 "" H -2250 100 50  0001 C CNN
-F 3 "" H -2250 100 50  0001 C CNN
-	1    -2250 100 
+P 6900 2250
+F 0 "#PWR0103" H 6900 2000 50  0001 C CNN
+F 1 "GND" H 7050 2200 50  0000 C CNN
+F 2 "" H 6900 2250 50  0001 C CNN
+F 3 "" H 6900 2250 50  0001 C CNN
+	1    6900 2250
 	1    0    0    -1  
 $EndComp
-Text Label -2300 300  0    50   ~ 0
+Text Label 6850 2450 0    50   ~ 0
 antenna
-Text Label -4500 4100 2    50   ~ 0
+Text Label 10900 3450 2    50   ~ 0
 en
 $Comp
 L Interface_USB:CP2104 U2
 U 1 1 606F8FB6
-P 14150 2250
-F 0 "U2" H 14700 1300 50  0000 C CNN
-F 1 "CP210x" H 13700 1300 50  0000 C CNN
-F 2 "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm" H 14300 1300 50  0001 L CNN
-F 3 "https://www.silabs.com/documents/public/data-sheets/cp2104.pdf" H 13600 3500 50  0001 C CNN
-F 4 "CP2105-F01-GMR" H 14150 2250 50  0001 C CNN "Part Number"
-F 5 "C109102" H 14150 2250 50  0001 C CNN "LCSC Part Number"
-	1    14150 2250
+P 1850 6400
+F 0 "U2" H 2400 5450 50  0000 C CNN
+F 1 "CP210x" H 1400 5450 50  0000 C CNN
+F 2 "Package_DFN_QFN:QFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm" H 2000 5450 50  0001 L CNN
+F 3 "https://www.silabs.com/documents/public/data-sheets/cp2104.pdf" H 1300 7650 50  0001 C CNN
+F 4 "CP2105-F01-GMR" H 1850 6400 50  0001 C CNN "Part Number"
+F 5 "C109102" H 1850 6400 50  0001 C CNN "LCSC Part Number"
+	1    1850 6400
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
@@ -159,14 +161,14 @@ Text Label 10100 5700 2    50   ~ 0
 D-
 Text Label 10900 5700 0    50   ~ 0
 D+
-Text Label 13450 2150 2    50   ~ 0
+Text Label 1150 6300 2    50   ~ 0
 D-
-Text Label 13450 2250 2    50   ~ 0
+Text Label 1150 6400 2    50   ~ 0
 D+
 Wire Wire Line
-	14150 3250 14150 3300
+	1850 7400 1850 7450
 Wire Wire Line
-	14250 3300 14250 3250
+	1950 7450 1950 7400
 $Comp
 L power:VBUS #PWR0107
 U 1 1 607108D8
@@ -424,6 +426,8 @@ F 0 "U3" H 10250 5950 50  0000 C CNN
 F 1 "USBLC6-2SC6" H 10500 5350 50  0000 C CNN
 F 2 "Package_TO_SOT_SMD:SOT-23-6" H 10500 5100 50  0001 C CNN
 F 3 "https://www.st.com/resource/en/datasheet/usblc6-2.pdf" H 10700 5950 50  0001 C CNN
+F 4 "C558442" H 10500 5600 50  0001 C CNN "LCSC Part Number"
+F 5 "TPUSBLC6-2SC6" H 10500 5600 50  0001 C CNN "Part Number"
 	1    10500 5600
 	1    0    0    -1  
 $EndComp
@@ -482,14 +486,6 @@ Text Notes 9700 2450 0    50   ~ 0
 Auto + manual reset
 Text Notes 2950 1900 0    50   ~ 0
 Battery charging
-Text Notes 13950 4100 0    50   ~ 0
-Extra indicator LEDs?
-Text Notes 13950 4400 0    50   ~ 0
-LDO for peripherals
-Text Notes 13950 4550 0    50   ~ 0
-5V boost for peripherals
-Text Notes 13950 5000 0    50   ~ 0
-Voltage dividers for battery and USB sense
 $Comp
 L Device:C_Small C6
 U 1 1 6074AEC7
@@ -518,78 +514,78 @@ Text Label 9850 3350 2    50   ~ 0
 DTR
 Text Label 9850 2750 2    50   ~ 0
 RTS
-Text Label 14850 1850 0    50   ~ 0
+Text Label 2550 6000 0    50   ~ 0
 DTR
-Text Label 14850 2450 0    50   ~ 0
+Text Label 2550 6600 0    50   ~ 0
 RTS
-NoConn ~ 14850 1650
-NoConn ~ 14850 1750
-NoConn ~ 14850 1950
-NoConn ~ 14850 2550
-NoConn ~ 13450 2950
-NoConn ~ 13450 2750
-NoConn ~ 13450 2650
-NoConn ~ 13450 2550
-NoConn ~ 13450 2450
-NoConn ~ 14850 2750
-NoConn ~ 14850 2850
-NoConn ~ 14850 2950
+NoConn ~ 2550 5800
+NoConn ~ 2550 5900
+NoConn ~ 2550 6100
+NoConn ~ 2550 6700
+NoConn ~ 1150 7100
+NoConn ~ 1150 6900
+NoConn ~ 1150 6800
+NoConn ~ 1150 6700
+NoConn ~ 1150 6600
+NoConn ~ 2550 6900
+NoConn ~ 2550 7000
+NoConn ~ 2550 7100
 $Comp
 L power:VBUS #PWR0118
 U 1 1 6076EA71
-P 13000 1400
-F 0 "#PWR0118" H 13000 1250 50  0001 C CNN
-F 1 "VBUS" H 13000 1550 50  0000 C CNN
-F 2 "" H 13000 1400 50  0001 C CNN
-F 3 "" H 13000 1400 50  0001 C CNN
-	1    13000 1400
+P 700 5550
+F 0 "#PWR0118" H 700 5400 50  0001 C CNN
+F 1 "VBUS" H 700 5700 50  0000 C CNN
+F 2 "" H 700 5550 50  0001 C CNN
+F 3 "" H 700 5550 50  0001 C CNN
+	1    700  5550
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C_Small C5
 U 1 1 60776C6D
-P 13300 1550
-F 0 "C5" H 13400 1550 50  0000 L CNN
-F 1 "100nF" H 13350 1450 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0402_1005Metric" H 13300 1550 50  0001 C CNN
-F 3 "~" H 13300 1550 50  0001 C CNN
-F 4 "CL05B104KO5NNNC" H 13300 1550 50  0001 C CNN "Part Number"
-F 5 "C1525" H 13300 1550 50  0001 C CNN "LCSC Part Number"
-	1    13300 1550
+P 1000 5700
+F 0 "C5" H 1100 5700 50  0000 L CNN
+F 1 "100nF" H 1050 5600 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 1000 5700 50  0001 C CNN
+F 3 "~" H 1000 5700 50  0001 C CNN
+F 4 "CL05B104KO5NNNC" H 1000 5700 50  0001 C CNN "Part Number"
+F 5 "C1525" H 1000 5700 50  0001 C CNN "LCSC Part Number"
+	1    1000 5700
 	-1   0    0    -1  
 $EndComp
 $Comp
 L power:GND #PWR0119
 U 1 1 6077D974
-P 13300 1650
-F 0 "#PWR0119" H 13300 1400 50  0001 C CNN
-F 1 "GND" H 13400 1550 50  0000 C CNN
-F 2 "" H 13300 1650 50  0001 C CNN
-F 3 "" H 13300 1650 50  0001 C CNN
-	1    13300 1650
+P 1000 5800
+F 0 "#PWR0119" H 1000 5550 50  0001 C CNN
+F 1 "GND" H 1100 5700 50  0000 C CNN
+F 2 "" H 1000 5800 50  0001 C CNN
+F 3 "" H 1000 5800 50  0001 C CNN
+	1    1000 5800
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	13000 1400 13300 1400
+	700  5550 1000 5550
 Wire Wire Line
-	13300 1400 13300 1450
+	1000 5550 1000 5600
 Wire Wire Line
-	13300 1400 13450 1400
-Connection ~ 13300 1400
+	1000 5550 1150 5550
+Connection ~ 1000 5550
 Wire Wire Line
-	13450 1400 13450 1650
+	1150 5550 1150 5800
 Wire Wire Line
-	13000 1400 13000 1850
-Connection ~ 13000 1400
+	700  5550 700  6000
+Connection ~ 700  5550
 Wire Wire Line
-	13000 1850 13450 1850
+	700  6000 1150 6000
 Wire Wire Line
-	13950 1350 13950 1300
+	1650 5500 1650 5450
 Wire Wire Line
-	13950 1300 14150 1300
+	1650 5450 1850 5450
 Wire Wire Line
-	14150 1300 14150 1350
-NoConn ~ 14350 1350
+	1850 5450 1850 5500
+NoConn ~ 2050 5500
 $Comp
 L Device:Q_PMOS_GSD Q2
 U 1 1 606C3FEB
@@ -633,9 +629,11 @@ U 1 1 607CF45A
 P 3750 2250
 F 0 "U4" H 3750 1935 50  0000 C CNN
 F 1 "TP4065" H 3750 2026 50  0000 C CNN
-F 2 "Package_TO_SOT_SMD:SOT-23-5_HandSoldering" H 3750 2000 50  0001 C CNN
+F 2 "Package_TO_SOT_SMD:SOT-23-5" H 3750 2000 50  0001 C CNN
 F 3 "" H 3750 2250 50  0001 C CNN
-F 4 "C32574" H 3750 2250 50  0001 C CNN "LCSC"
+F 4 "" H 3750 2250 50  0001 C CNN "LCSC"
+F 5 "C32574" H 3750 2250 50  0001 C CNN "LCSC Part Number"
+F 6 "TP4054" H 3750 2250 50  0001 C CNN "Part Number"
 	1    3750 2250
 	1    0    0    1   
 $EndComp
@@ -659,11 +657,11 @@ L Device:R_Small R5
 U 1 1 607DF5A7
 P 4150 2500
 F 0 "R5" H 4050 2450 50  0000 C CNN
-F 1 "3k" H 4050 2550 50  0000 C CNN
+F 1 "3.3k" H 4050 2550 50  0000 C CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" H 4150 2500 50  0001 C CNN
 F 3 "~" H 4150 2500 50  0001 C CNN
-F 4 "0402WGF3001TCE" V 4150 2500 50  0001 C CNN "Part Number"
-F 5 "C25784" V 4150 2500 50  0001 C CNN "LCSC Part Number"
+F 4 "0402WGF3301TCE" V 4150 2500 50  0001 C CNN "Part Number"
+F 5 "C25890" V 4150 2500 50  0001 C CNN "LCSC Part Number"
 	1    4150 2500
 	-1   0    0    1   
 $EndComp
@@ -680,11 +678,11 @@ L Device:C_Small C7
 U 1 1 607EAD04
 P 3150 2250
 F 0 "C7" H 3250 2250 50  0000 L CNN
-F 1 "1uF" H 3200 2150 50  0000 L CNN
+F 1 "10uF" H 3200 2150 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 3150 2250 50  0001 C CNN
 F 3 "~" H 3150 2250 50  0001 C CNN
-F 4 "CL05A105KA5NQNC" H 3150 2250 50  0001 C CNN "Part Number"
-F 5 "C52923" H 3150 2250 50  0001 C CNN "LCSC Part Number"
+F 4 "CL05A106MQ5NUNC" H 3150 2250 50  0001 C CNN "Part Number"
+F 5 "C15525" H 3150 2250 50  0001 C CNN "LCSC Part Number"
 	1    3150 2250
 	-1   0    0    -1  
 $EndComp
@@ -752,14 +750,14 @@ Wire Notes Line
 Wire Notes Line
 	4400 1800 2950 1800
 Wire Wire Line
-	-2300 300  -2350 300 
+	6850 2450 6800 2450
 Wire Wire Line
-	-2400 350  -2350 350 
+	6750 2500 6800 2500
 Wire Wire Line
-	-2350 350  -2350 300 
+	6800 2500 6800 2450
 Wire Wire Line
-	-2350 100  -2350 300 
-Connection ~ -2350 300 
+	6800 2250 6800 2450
+Connection ~ 6800 2450
 $Comp
 L Device:R_Small R6
 U 1 1 6086F1B5
@@ -778,7 +776,7 @@ L Switch:SW_Push SW1
 U 1 1 6087397B
 P 10900 3700
 F 0 "SW1" H 10750 3800 50  0000 C CNN
-F 1 "Reset" H 11050 3800 50  0000 C CNN
+F 1 "SKRKAEE020" H 10900 3650 50  0000 C CNN
 F 2 "custom:SW_Push_SPST_NO_Alps_SKRK" H 10900 3900 50  0001 C CNN
 F 3 "~" H 10900 3900 50  0001 C CNN
 F 4 "SKRKAEE020" H 10900 3700 50  0001 C CNN "Part Number"
@@ -869,8 +867,6 @@ F 5 "C85233" H 1650 3250 50  0001 C CNN "LCSC Part Number"
 	1    1650 2700
 	1    0    0    -1  
 $EndComp
-Text Notes 16150 4100 0    50   ~ 0
-Fuse on battery?
 $Comp
 L Switch:SW_SPDT SW2
 U 1 1 6098B753
@@ -879,6 +875,8 @@ F 0 "SW2" H 850 1700 50  0000 C CNN
 F 1 "REG SELECT" H 850 1250 50  0000 C CNN
 F 2 "custom:SPDT_Switch_K3-1235S-F1_WITH_BRIDGES" H 850 1500 50  0001 C CNN
 F 3 "~" H 850 1500 50  0001 C CNN
+F 4 "C92660" H 850 1500 50  0001 C CNN "LCSC Part Number"
+F 5 "K3-1235S-F1" H 850 1500 50  0001 C CNN "Part Number"
 	1    850  1500
 	1    0    0    -1  
 $EndComp
@@ -1133,11 +1131,7 @@ F 3 "" H 3300 2400 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-3500 4850 -3750 4850
-Wire Wire Line
-	-3750 4850 -3750 5100
-Wire Wire Line
-	-3750 5100 -3650 5100
+	9050 2650 9150 2650
 $Comp
 L power:GNDPWR #PWR0122
 U 1 1 60AEF262
@@ -1321,29 +1315,25 @@ Wire Notes Line style solid rgb(0, 132, 0)
 $Comp
 L power:GND #PWR0116
 U 1 1 60DE6960
-P -3200 3350
-F 0 "#PWR0116" H -3200 3100 50  0001 C CNN
-F 1 "GND" H -3200 3200 50  0000 C CNN
-F 2 "" H -3200 3350 50  0001 C CNN
-F 3 "" H -3200 3350 50  0001 C CNN
-	1    -3200 3350
+P 5950 5500
+F 0 "#PWR0116" H 5950 5250 50  0001 C CNN
+F 1 "GND" H 5950 5350 50  0000 C CNN
+F 2 "" H 5950 5500 50  0001 C CNN
+F 3 "" H 5950 5500 50  0001 C CNN
+	1    5950 5500
 	1    0    0    -1  
 $EndComp
-Text Notes 13950 5450 0    50   ~ 0
-Check serial chip vdd. Should it just hook up to 3.3v instead of vbus?
 $Comp
 L power:GND #PWR0121
 U 1 1 60E4BCEA
-P -3500 4850
-F 0 "#PWR0121" H -3500 4600 50  0001 C CNN
-F 1 "GND" H -3500 4700 50  0000 C CNN
-F 2 "" H -3500 4850 50  0001 C CNN
-F 3 "" H -3500 4850 50  0001 C CNN
-	1    -3500 4850
+P 9150 2450
+F 0 "#PWR0121" H 9150 2200 50  0001 C CNN
+F 1 "GND" H 9250 2450 50  0000 C CNN
+F 2 "" H 9150 2450 50  0001 C CNN
+F 3 "" H 9150 2450 50  0001 C CNN
+	1    9150 2450
 	1    0    0    -1  
 $EndComp
-Text Notes 13950 5650 0    50   ~ 0
-Pin 1 markers for JLC
 Wire Wire Line
 	3800 3150 3900 3150
 Wire Wire Line
@@ -1437,38 +1427,38 @@ F 3 "" H 4200 3150 50  0001 C CNN
 	1    4200 3200
 	1    0    0    -1  
 $EndComp
-Text Label 14850 2250 0    50   ~ 0
+Text Label 2550 6400 0    50   ~ 0
 CP2104_RXD
-Text Label 14850 2150 0    50   ~ 0
+Text Label 2550 6300 0    50   ~ 0
 CP2104_TXD
-Text Label 250  -1800 0    50   ~ 0
+Text Label 3800 7500 0    50   ~ 0
 esp_rxd
-Text Label 250  -1700 0    50   ~ 0
+Text Label 3800 7600 0    50   ~ 0
 esp_txd
-Text Label 100  -1700 2    50   ~ 0
+Text Label 3650 7600 2    50   ~ 0
 CP2104_RXD
-Text Label 100  -1800 2    50   ~ 0
+Text Label 3650 7500 2    50   ~ 0
 CP2104_TXD
-Text Notes -250 -1900 0    50   ~ 0
+Text Notes 3300 7400 0    50   ~ 0
 Don't forget criss\ncross applesauce
 Wire Wire Line
-	250  -1800 100  -1800
+	3800 7500 3650 7500
 Wire Wire Line
-	100  -1700 250  -1700
+	3650 7600 3800 7600
 Wire Notes Line
-	-400 -1650 -400 -2050
+	3150 7650 3150 7250
 Wire Notes Line
-	-400 -2050 600  -2050
+	3150 7250 4150 7250
 Wire Notes Line
-	600  -2050 600  -1650
+	4150 7250 4150 7650
 Wire Notes Line
-	600  -1650 -400 -1650
+	4150 7650 3150 7650
 $Comp
 L Switch:SW_Push SW3
 U 1 1 6117588E
 P 10050 3700
 F 0 "SW3" H 9900 3800 50  0000 C CNN
-F 1 "Boot" H 10200 3800 50  0000 C CNN
+F 1 "SKRKAEE020" H 10050 3650 50  0000 C CNN
 F 2 "custom:SW_Push_SPST_NO_Alps_SKRK" H 10050 3900 50  0001 C CNN
 F 3 "~" H 10050 3900 50  0001 C CNN
 F 4 "SKRKAEE020" H 10050 3700 50  0001 C CNN "Part Number"
@@ -1659,13 +1649,13 @@ F 3 "" H 10550 900 50  0001 C CNN
 	1    10550 900 
 	1    0    0    -1  
 $EndComp
-Text Label 50   -1000 2    50   ~ 0
+Text Label 3900 6400 2    50   ~ 0
 batt_adc
-Text Label 50   -850 2    50   ~ 0
+Text Label 3900 6550 2    50   ~ 0
 vbus_adc
-Text Label -2400 850  0    50   ~ 0
+Text Label 6750 3000 0    50   ~ 0
 esp_rxd
-Text Label -2400 650  0    50   ~ 0
+Text Label 6750 2800 0    50   ~ 0
 esp_txd
 $Comp
 L Device:Q_PMOS_GSD Q3
@@ -1704,8 +1694,6 @@ F 5 "C25741" V 7900 1250 50  0001 C CNN "LCSC Part Number"
 	1    7900 1250
 	-1   0    0    1   
 $EndComp
-Text Label 8500 1050 0    50   ~ 0
-SWITCHED_3v3
 Wire Wire Line
 	7900 950  7900 1050
 Wire Wire Line
@@ -1794,7 +1782,7 @@ Wire Wire Line
 Wire Wire Line
 	9850 1150 9850 1200
 Connection ~ 9850 1150
-Text Notes -250 -1300 0    50   ~ 0
+Text Notes 3300 6150 0    50   ~ 0
 en_switched_vcc is active low
 Wire Wire Line
 	9700 1050 9750 1050
@@ -1862,44 +1850,44 @@ Wire Notes Line
 $Comp
 L Connector_Generic:Conn_01x02 J4
 U 1 1 615C2918
-P 6900 2750
-F 0 "J4" H 6900 2550 50  0000 C CNN
-F 1 "JST-PH Battery" H 7050 2850 50  0000 C CNN
-F 2 "Connector_JST:JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal" H 6900 2750 50  0001 C CNN
-F 3 "~" H 6900 2750 50  0001 C CNN
-F 4 "A2001WR-2P" H 6900 2750 50  0001 C CNN "Part Number"
-F 5 "C225207" H 6900 2750 50  0001 C CNN "LCSC Part Number"
-	1    6900 2750
+P 9600 2000
+F 0 "J4" H 9600 1800 50  0000 C CNN
+F 1 "JST-PH Battery" H 9750 2100 50  0000 C CNN
+F 2 "Connector_JST:JST_PH_S2B-PH-K_1x02_P2.00mm_Horizontal" H 9600 2000 50  0001 C CNN
+F 3 "~" H 9600 2000 50  0001 C CNN
+F 4 "A2001WR-2P" H 9600 2000 50  0001 C CNN "Part Number"
+F 5 "C225207" H 9600 2000 50  0001 C CNN "LCSC Part Number"
+	1    9600 2000
 	1    0    0    1   
 $EndComp
 Wire Wire Line
-	6650 2800 6650 2750
+	9350 2050 9350 2000
 Wire Wire Line
-	6650 2750 6700 2750
+	9350 2000 9400 2000
 $Comp
 L power:+BATT #PWR0147
 U 1 1 615DDC11
-P 6650 2600
-F 0 "#PWR0147" H 6650 2450 50  0001 C CNN
-F 1 "+BATT" H 6650 2750 50  0000 C CNN
-F 2 "" H 6650 2600 50  0001 C CNN
-F 3 "" H 6650 2600 50  0001 C CNN
-	1    6650 2600
+P 9350 1850
+F 0 "#PWR0147" H 9350 1700 50  0001 C CNN
+F 1 "+BATT" H 9350 2000 50  0000 C CNN
+F 2 "" H 9350 1850 50  0001 C CNN
+F 3 "" H 9350 1850 50  0001 C CNN
+	1    9350 1850
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	6650 2600 6650 2650
+	9350 1850 9350 1900
 Wire Wire Line
-	6650 2650 6700 2650
+	9350 1900 9400 1900
 $Comp
 L power:GNDPWR #PWR0146
 U 1 1 615F0F02
-P 6650 2800
-F 0 "#PWR0146" H 6650 2600 50  0001 C CNN
-F 1 "GNDPWR" H 6650 2650 50  0000 C CNN
-F 2 "" H 6650 2750 50  0001 C CNN
-F 3 "" H 6650 2750 50  0001 C CNN
-	1    6650 2800
+P 9350 2050
+F 0 "#PWR0146" H 9350 1850 50  0001 C CNN
+F 1 "GNDPWR" H 9350 1900 50  0000 C CNN
+F 2 "" H 9350 2000 50  0001 C CNN
+F 3 "" H 9350 2000 50  0001 C CNN
+	1    9350 2050
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -1913,437 +1901,502 @@ F 3 "" H 7900 950 50  0001 C CNN
 	1    7900 950 
 	1    0    0    -1  
 $EndComp
-Text Label 50   -1150 2    50   ~ 0
+Text Label 3900 6250 2    50   ~ 0
 en_switched_3v3
 Wire Wire Line
 	11100 3800 11100 3700
-Text Label 50   -750 2    50   ~ 0
+Text Label 3900 6700 2    50   ~ 0
 en_batt_divider
 Wire Wire Line
 	2150 2700 2700 2700
 $Comp
 L power:+3.3V #PWR0102
 U 1 1 607E5EC3
-P -3900 5100
-F 0 "#PWR0102" H -3900 4950 50  0001 C CNN
-F 1 "+3.3V" H -3900 5250 50  0000 C CNN
-F 2 "" H -3900 5100 50  0001 C CNN
-F 3 "" H -3900 5100 50  0001 C CNN
-	1    -3900 5100
+P 8850 2700
+F 0 "#PWR0102" H 8850 2550 50  0001 C CNN
+F 1 "+3.3V" H 8850 2850 50  0000 C CNN
+F 2 "" H 8850 2700 50  0001 C CNN
+F 3 "" H 8850 2700 50  0001 C CNN
+	1    8850 2700
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-4300 -500 -4150 -500
-Connection ~ -4300 -500
+	5000 1850 5150 1850
+Connection ~ 5000 1850
 Wire Wire Line
-	-4450 -500 -4300 -500
+	4850 1850 5000 1850
 Wire Wire Line
-	-4300 -200 -4450 -200
-Connection ~ -4300 -200
+	5000 2150 4850 2150
+Connection ~ 5000 2150
 $Comp
 L power:GND #PWR0136
 U 1 1 6081226F
-P -4300 -200
-F 0 "#PWR0136" H -4300 -450 50  0001 C CNN
-F 1 "GND" H -4150 -250 50  0000 C CNN
-F 2 "" H -4300 -200 50  0001 C CNN
-F 3 "" H -4300 -200 50  0001 C CNN
-	1    -4300 -200
+P 5000 2150
+F 0 "#PWR0136" H 5000 1900 50  0001 C CNN
+F 1 "GND" H 5150 2100 50  0000 C CNN
+F 2 "" H 5000 2150 50  0001 C CNN
+F 3 "" H 5000 2150 50  0001 C CNN
+	1    5000 2150
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-4450 -200 -4450 -250
+	4850 2150 4850 2100
 Wire Wire Line
-	-4150 -200 -4300 -200
+	5150 2150 5000 2150
 Wire Wire Line
-	-4150 -250 -4150 -200
+	5150 2100 5150 2150
 Wire Wire Line
-	-4450 -500 -4450 -450
+	4850 1850 4850 1900
 Wire Wire Line
-	-4150 -500 -4150 -450
+	5150 1850 5150 1900
 $Comp
 L Device:C_Small C10
 U 1 1 607E9BD6
-P -4450 -350
-F 0 "C10" H -4400 -250 50  0000 L CNN
-F 1 "10uF" H -4400 -400 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0402_1005Metric" H -4450 -350 50  0001 C CNN
-F 3 "~" H -4450 -350 50  0001 C CNN
-F 4 "CL05A106MQ5NUNC" H -4450 -350 50  0001 C CNN "Part Number"
-F 5 "C15525" H -4450 -350 50  0001 C CNN "LCSC Part Number"
-	1    -4450 -350
+P 4850 2000
+F 0 "C10" H 4900 2100 50  0000 L CNN
+F 1 "10uF" H 4900 1950 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 4850 2000 50  0001 C CNN
+F 3 "~" H 4850 2000 50  0001 C CNN
+F 4 "CL05A106MQ5NUNC" H 4850 2000 50  0001 C CNN "Part Number"
+F 5 "C15525" H 4850 2000 50  0001 C CNN "LCSC Part Number"
+	1    4850 2000
 	1    0    0    -1  
 $EndComp
 $Comp
 L power:+3.3V #PWR0148
 U 1 1 607E801B
-P -4300 -500
-F 0 "#PWR0148" H -4300 -650 50  0001 C CNN
-F 1 "+3.3V" H -4300 -350 50  0000 C CNN
-F 2 "" H -4300 -500 50  0001 C CNN
-F 3 "" H -4300 -500 50  0001 C CNN
-	1    -4300 -500
+P 5000 1850
+F 0 "#PWR0148" H 5000 1700 50  0001 C CNN
+F 1 "+3.3V" H 5000 2000 50  0000 C CNN
+F 2 "" H 5000 1850 50  0001 C CNN
+F 3 "" H 5000 1850 50  0001 C CNN
+	1    5000 1850
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:C_Small C18
 U 1 1 607C0E72
-P -4150 -350
-F 0 "C18" H -4300 -450 50  0000 L CNN
-F 1 "100nF" H -4450 -300 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0402_1005Metric" H -4150 -350 50  0001 C CNN
-F 3 "~" H -4150 -350 50  0001 C CNN
-F 4 "CL05B104KO5NNNC" H -4150 -350 50  0001 C CNN "Part Number"
-F 5 "C1525" H -4150 -350 50  0001 C CNN "LCSC Part Number"
-	1    -4150 -350
+P 5150 2000
+F 0 "C18" H 5000 1900 50  0000 L CNN
+F 1 "100nF" H 4850 2050 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 5150 2000 50  0001 C CNN
+F 3 "~" H 5150 2000 50  0001 C CNN
+F 4 "CL05B104KO5NNNC" H 5150 2000 50  0001 C CNN "Part Number"
+F 5 "C1525" H 5150 2000 50  0001 C CNN "LCSC Part Number"
+	1    5150 2000
 	-1   0    0    1   
 $EndComp
-Text Notes -4650 -700 0    50   ~ 0
+Text Notes 4650 1650 0    50   ~ 0
 Bypass\nPlace near VDD pins
 $Comp
 L power:+3.3V #PWR0149
 U 1 1 608330F8
-P -3400 50
-F 0 "#PWR0149" H -3400 -100 50  0001 C CNN
-F 1 "+3.3V" H -3400 200 50  0000 C CNN
-F 2 "" H -3400 50  50  0001 C CNN
-F 3 "" H -3400 50  50  0001 C CNN
-	1    -3400 50  
+P 5750 2200
+F 0 "#PWR0149" H 5750 2050 50  0001 C CNN
+F 1 "+3.3V" H 5750 2350 50  0000 C CNN
+F 2 "" H 5750 2200 50  0001 C CNN
+F 3 "" H 5750 2200 50  0001 C CNN
+	1    5750 2200
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-3400 50   -3400 100 
+	5750 2200 5750 2250
 Wire Wire Line
-	-3300 150  -3300 100 
+	5850 2300 5850 2250
 Wire Wire Line
-	-3300 100  -3400 100 
-Connection ~ -3400 100 
+	5850 2250 5750 2250
+Connection ~ 5750 2250
 Wire Wire Line
-	-3400 100  -3400 150 
+	5750 2250 5750 2300
 Wire Wire Line
-	-3100 150  -3100 100 
+	6050 2300 6050 2250
 Wire Wire Line
-	-3100 100  -3200 100 
-Connection ~ -3300 100 
+	6050 2250 5950 2250
+Connection ~ 5850 2250
 Wire Wire Line
-	-3200 150  -3200 100 
-Connection ~ -3200 100 
+	5950 2300 5950 2250
+Connection ~ 5950 2250
 Wire Wire Line
-	-3200 100  -3300 100 
+	5950 2250 5850 2250
 $Comp
 L RF_Module:ESP32-PICO-D4 U1
 U 1 1 606B8F56
-P -3200 1750
-F 0 "U1" H -3850 200 50  0000 C CNN
-F 1 "ESP32-PICO-D4" H -2800 200 50  0000 C CNN
-F 2 "custom:QFN-48-1EP_7x7mm_P0.5mm_EP4.6x4.6mm" H -3200 50  50  0001 C CNN
-F 3 "https://www.espressif.com/sites/default/files/documentation/esp32-pico-d4_datasheet_en.pdf" H -2950 750 50  0001 C CNN
-	1    -3200 1750
+P 5950 3900
+F 0 "U1" H 5300 2350 50  0000 C CNN
+F 1 "ESP32-PICO-D4" H 6350 2350 50  0000 C CNN
+F 2 "custom:QFN-48-1EP_7x7mm_P0.5mm_EP4.6x4.6mm" H 5950 2200 50  0001 C CNN
+F 3 "https://www.espressif.com/sites/default/files/documentation/esp32-pico-d4_datasheet_en.pdf" H 6200 2900 50  0001 C CNN
+F 4 "C193707" H 5950 3900 50  0001 C CNN "LCSC Part Number"
+F 5 "ESP32-PICO-D4" H 5950 3900 50  0001 C CNN "Part Number"
+	1    5950 3900
 	1    0    0    -1  
 $EndComp
-NoConn ~ -2400 3050
+NoConn ~ 6750 5200
 $Comp
 L Connector:TestPoint TP1
 U 1 1 608A76CA
-P -4450 4100
-F 0 "TP1" H -4392 4218 50  0000 L CNN
-F 1 "EN" H -4392 4127 50  0000 L CNN
-F 2 "TestPoint:TestPoint_Pad_D1.0mm" H -4250 4100 50  0001 C CNN
-F 3 "~" H -4250 4100 50  0001 C CNN
-	1    -4450 4100
+P 10950 3450
+F 0 "TP1" H 11008 3568 50  0000 L CNN
+F 1 "EN" H 11008 3477 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 11150 3450 50  0001 C CNN
+F 3 "~" H 11150 3450 50  0001 C CNN
+	1    10950 3450
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-4450 4100 -4500 4100
-Text Label -2400 3050 0    50   ~ 0
+	10950 3450 10900 3450
+Text Label 6750 5200 0    50   ~ 0
 VDD_SDIO
 Wire Wire Line
-	14150 3300 14200 3300
+	1850 7450 1900 7450
 $Comp
 L power:GNDPWR #PWR0106
 U 1 1 60968C0F
-P 14200 3300
-F 0 "#PWR0106" H 14200 3100 50  0001 C CNN
-F 1 "GNDPWR" H 14200 3200 50  0000 C CNN
-F 2 "" H 14200 3250 50  0001 C CNN
-F 3 "" H 14200 3250 50  0001 C CNN
-	1    14200 3300
+P 1900 7450
+F 0 "#PWR0106" H 1900 7250 50  0001 C CNN
+F 1 "GNDPWR" H 1900 7350 50  0000 C CNN
+F 2 "" H 1900 7400 50  0001 C CNN
+F 3 "" H 1900 7400 50  0001 C CNN
+	1    1900 7450
 	1    0    0    -1  
 $EndComp
-Connection ~ 14200 3300
+Connection ~ 1900 7450
 Wire Wire Line
-	14200 3300 14250 3300
-Text Label 100  -300 2    50   ~ 0
+	1900 7450 1950 7450
+Text Label 3900 7000 2    50   ~ 0
 DCDC_PS
 Wire Wire Line
-	100  -300 250  -300
-Wire Wire Line
-	250  -850 50   -850
-Text Label -2250 4300 0    50   ~ 0
+	4100 6550 3900 6550
+Text Label -3450 5250 0    50   ~ 0
 io0
-Text Label -2250 4400 0    50   ~ 0
+Text Label -3450 5350 0    50   ~ 0
 io2
-Text Label -550 4300 0    50   ~ 0
+Text Label -1750 5250 0    50   ~ 0
 io4
-Text Label -1500 5800 0    50   ~ 0
+Text Label -2700 6750 0    50   ~ 0
 io5
-Text Label -2250 5050 0    50   ~ 0
+Text Label -3450 6000 0    50   ~ 0
 sd2_io9
-Text Label -2250 5150 0    50   ~ 0
+Text Label -3450 6100 0    50   ~ 0
 sd3_io10
-Text Label -2250 5750 0    50   ~ 0
+Text Label -3450 6700 0    50   ~ 0
 io12
-Text Label -2250 5850 0    50   ~ 0
+Text Label -3450 6800 0    50   ~ 0
 io13
-Text Label -2250 5950 0    50   ~ 0
+Text Label -3450 6900 0    50   ~ 0
 io14
-Text Label -2250 6050 0    50   ~ 0
+Text Label -3450 7000 0    50   ~ 0
 io15
-Text Label -1500 5700 0    50   ~ 0
+Text Label -2700 6650 0    50   ~ 0
 io18
-Text Label -1500 5600 0    50   ~ 0
+Text Label -2700 6550 0    50   ~ 0
 io19
-Text Label -1500 5100 0    50   ~ 0
+Text Label -2700 6050 0    50   ~ 0
 io21
-Text Label -1500 5200 0    50   ~ 0
+Text Label -2700 6150 0    50   ~ 0
 io22
-Text Label -1500 5500 0    50   ~ 0
+Text Label -2700 6450 0    50   ~ 0
 io23
-Text Label -550 4600 0    50   ~ 0
+Text Label -1750 5550 0    50   ~ 0
 io25
-Text Label -550 4700 0    50   ~ 0
+Text Label -1750 5650 0    50   ~ 0
 io26
-Text Label -550 4800 0    50   ~ 0
+Text Label -1750 5750 0    50   ~ 0
 io27
-Text Label -550 4900 0    50   ~ 0
+Text Label -1750 5850 0    50   ~ 0
 io32
-Text Label 250  -1000 0    50   ~ 0
-io33
-Text Label -1450 4300 0    50   ~ 0
+Text Label -2650 5250 0    50   ~ 0
 io34
-Text Label -1450 4400 0    50   ~ 0
+Text Label -2650 5350 0    50   ~ 0
 io35
-Text Label -1450 4500 0    50   ~ 0
+Text Label -2650 5450 0    50   ~ 0
 sensor_vp
-Text Label -1450 4800 0    50   ~ 0
+Text Label -2650 5750 0    50   ~ 0
 sensor_capp
-Text Label -1450 4700 0    50   ~ 0
+Text Label -2650 5650 0    50   ~ 0
 sensor_capn
-Text Label -1450 4600 0    50   ~ 0
+Text Label -2650 5550 0    50   ~ 0
 sensor_vn
-Text Label -550 4400 0    50   ~ 0
+Text Label -1750 5350 0    50   ~ 0
 io16
-Text Label -550 4500 0    50   ~ 0
+Text Label -1750 5450 0    50   ~ 0
 io17
-Text Label -2250 4850 0    50   ~ 0
+Text Label -3450 5800 0    50   ~ 0
 sd0
-Text Label -2250 4950 0    50   ~ 0
+Text Label -3450 5900 0    50   ~ 0
 sd1
-Text Label -2250 4750 0    50   ~ 0
+Text Label -3450 5700 0    50   ~ 0
 clk
-Text Label -2250 5250 0    50   ~ 0
+Text Label -3450 6200 0    50   ~ 0
 cmd
-Text Notes -2400 4200 0    50   ~ 0
+Text Notes -3600 5150 0    50   ~ 0
 Unavailable
-Text Notes -1600 4200 0    50   ~ 0
+Text Notes -2800 5150 0    50   ~ 0
 Input only
-Text Notes -2400 4650 0    50   ~ 0
+Text Notes -3600 5600 0    50   ~ 0
 Connected to flash
-Text Notes -2150 6100 0    50   ~ 0
+Text Notes -3350 7050 0    50   ~ 0
 Low at boot to disable debug logging
-Text Notes -1550 5000 0    50   ~ 0
+Text Notes -2750 5950 0    50   ~ 0
 I2C
 Wire Notes Line
-	-1550 5750 -1300 5750
-Text Notes -1550 5400 0    50   ~ 0
+	-2750 6700 -2500 6700
+Text Notes -2750 6350 0    50   ~ 0
 VSPI
-Text Notes -2300 5650 0    50   ~ 0
+Text Notes -3500 6600 0    50   ~ 0
 JTAG
-Text Notes -600 4200 0    50   ~ 0
+Text Notes -1800 5150 0    50   ~ 0
 GPIO
-Text Notes -350 4900 0    50   ~ 0
+Text Notes -1550 5850 0    50   ~ 0
 ADC1_CH4
-Text Notes -350 5000 0    50   ~ 0
+Text Notes -1550 5950 0    50   ~ 0
 ADC1_CH5
-Text Notes -1250 4300 0    50   ~ 0
+Text Notes -2450 5250 0    50   ~ 0
 ADC1_CH6
-Text Notes -1250 4400 0    50   ~ 0
+Text Notes -2450 5350 0    50   ~ 0
 ADC1_CH7
-Text Notes -1050 4500 0    50   ~ 0
+Text Notes -2250 5450 0    50   ~ 0
 ADC1_CH0
-Text Notes -1050 4600 0    50   ~ 0
+Text Notes -2250 5550 0    50   ~ 0
 ADC1_CH3
-Text Notes -2100 4300 0    50   ~ 0
+Text Notes -3300 5250 0    50   ~ 0
 TOUCH
-Text Notes -2100 4400 0    50   ~ 0
+Text Notes -3300 5350 0    50   ~ 0
 TOUCH
-Text Notes -350 4300 0    50   ~ 0
+Text Notes -1550 5250 0    50   ~ 0
 TOUCH
-Text Notes -2000 5750 0    50   ~ 0
+Text Notes -3200 6700 0    50   ~ 0
 TOUCH
-Text Notes -2000 5850 0    50   ~ 0
+Text Notes -3200 6800 0    50   ~ 0
 TOUCH
-Text Notes -2000 5950 0    50   ~ 0
+Text Notes -3200 6900 0    50   ~ 0
 TOUCH
-Text Notes -2000 6050 0    50   ~ 0
+Text Notes -3200 7000 0    50   ~ 0
 TOUCH
-Text Notes -350 4800 0    50   ~ 0
+Text Notes -1550 5750 0    50   ~ 0
 TOUCH
-Text Notes 150  4900 0    50   ~ 0
+Text Notes -1100 5850 0    50   ~ 0
 TOUCH
-Text Notes 150  5000 0    50   ~ 0
+Text Notes -1100 5950 0    50   ~ 0
 TOUCH
-Text Notes -1000 4800 0    50   ~ 0
+Text Notes -2200 5750 0    50   ~ 0
 ADC1_CH1
-Text Notes -1000 4700 0    50   ~ 0
+Text Notes -2200 5650 0    50   ~ 0
 ADC1_CH2
 Wire Wire Line
-	250  -750 50   -750
+	4100 6700 3900 6700
 Wire Wire Line
-	250  -1000 50   -1000
-Text Label 250  -850 0    50   ~ 0
-sensor_vp
-Text Label -4500 5200 2    50   ~ 0
-sensor_vn
-Text Label 250  -450 0    50   ~ 0
+	4100 6400 3900 6400
+Text Label 4100 6850 0    50   ~ 0
 io0
-Text Label 50   -450 2    50   ~ 0
+Text Label 3900 6850 2    50   ~ 0
 boot
 Wire Wire Line
-	250  -450 50   -450
+	4100 6850 3900 6850
 Wire Wire Line
-	250  -1150 50   -1150
-Text Label 250  -300 0    50   ~ 0
+	4100 6250 3900 6250
+Text Label 4100 7000 0    50   ~ 0
 io17
-Text Label -3650 5300 2    50   ~ 0
-SWITCHED_3v3
-Wire Wire Line
-	-3900 5100 -3900 5200
-Wire Wire Line
-	-3900 5200 -3650 5200
-Text Label 250  -750 0    50   ~ 0
+Text Label 4100 6700 0    50   ~ 0
 io4
-Text Label -4500 5100 2    50   ~ 0
+Text Label 8000 3250 2    50   ~ 0
 sensor_capn
-Text Label -4500 5400 2    50   ~ 0
+Text Label 8000 2650 2    50   ~ 0
 io35
-Text Label -4500 5500 2    50   ~ 0
+Text Label 8000 2750 2    50   ~ 0
 io32
-Text Label -4500 5600 2    50   ~ 0
+Text Label 8000 2950 2    50   ~ 0
 io25
-Text Label -4500 5300 2    50   ~ 0
+Text Label 8000 3150 2    50   ~ 0
 io34
-Text Label -4500 5700 2    50   ~ 0
+Text Label 8000 3050 2    50   ~ 0
 io26
-Text Label -4500 5800 2    50   ~ 0
+Text Label 8000 3350 2    50   ~ 0
 io27
-Text Label -4500 5900 2    50   ~ 0
+Text Label 8000 3650 2    50   ~ 0
 io14
-Text Label -4500 6000 2    50   ~ 0
+Text Label 8000 3450 2    50   ~ 0
 io12
-Text Label -4500 6100 2    50   ~ 0
+Text Label 8000 3550 2    50   ~ 0
 io13
-Text Label -3650 5800 2    50   ~ 0
+Text Label 9150 3350 2    50   ~ 0
 io22
-Text Label -3650 5600 2    50   ~ 0
+Text Label 9150 3250 2    50   ~ 0
 io19
-Text Label -3650 5900 2    50   ~ 0
+Text Label 9150 2950 2    50   ~ 0
 io23
-Text Label -3650 5400 2    50   ~ 0
+Text Label 9150 3050 2    50   ~ 0
 io18
-Text Label -3650 5500 2    50   ~ 0
-io5
-Text Label -3650 6000 2    50   ~ 0
+Text Label 9150 3550 2    50   ~ 0
 io15
-Text Label -2400 6950 2    50   ~ 0
+Text Label 10550 2000 2    50   ~ 0
 io15
 $Comp
 L Connector_Generic:Conn_01x02 J5
 U 1 1 60F872C3
-P -2200 6850
-F 0 "J5" H -2120 6842 50  0000 L CNN
-F 1 "n_log" H -2120 6751 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H -2200 6850 50  0001 C CNN
-F 3 "~" H -2200 6850 50  0001 C CNN
-	1    -2200 6850
+P 10750 1900
+F 0 "J5" H 10830 1892 50  0000 L CNN
+F 1 "n_log" H 10830 1801 50  0000 L CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical" H 10750 1900 50  0001 C CNN
+F 3 "~" H 10750 1900 50  0001 C CNN
+	1    10750 1900
 	1    0    0    -1  
 $EndComp
 $Comp
 L power:GND #PWR0150
 U 1 1 60F89980
-P -2650 6950
-F 0 "#PWR0150" H -2650 6700 50  0001 C CNN
-F 1 "GND" H -2650 6800 50  0000 C CNN
-F 2 "" H -2650 6950 50  0001 C CNN
-F 3 "" H -2650 6950 50  0001 C CNN
-	1    -2650 6950
+P 10300 2000
+F 0 "#PWR0150" H 10300 1750 50  0001 C CNN
+F 1 "GND" H 10300 1850 50  0000 C CNN
+F 2 "" H 10300 2000 50  0001 C CNN
+F 3 "" H 10300 2000 50  0001 C CNN
+	1    10300 2000
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-2400 6850 -2650 6850
+	10550 1900 10300 1900
 Wire Wire Line
-	-2650 6850 -2650 6950
-Text Label 250  -1150 0    50   ~ 0
+	10300 1900 10300 2000
+Text Label 4100 6250 0    50   ~ 0
 io16
-Text Label -3650 5700 2    50   ~ 0
+Text Label 9150 3450 2    50   ~ 0
 io21
 $Comp
 L Device:R_Small R14
 U 1 1 610B9E14
-P 2300 -1050
-F 0 "R14" H 2200 -1100 50  0000 C CNN
-F 1 "100k" H 2200 -1000 50  0000 C CNN
-F 2 "Resistor_SMD:R_0402_1005Metric" H 2300 -1050 50  0001 C CNN
-F 3 "~" H 2300 -1050 50  0001 C CNN
-F 4 "0402WGF1003TCE" V 2300 -1050 50  0001 C CNN "Part Number"
-F 5 "C25741" V 2300 -1050 50  0001 C CNN "LCSC Part Number"
-	1    2300 -1050
+P 4200 4750
+F 0 "R14" H 4350 4700 50  0000 C CNN
+F 1 "100k" H 4350 4800 50  0000 C CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" H 4200 4750 50  0001 C CNN
+F 3 "~" H 4200 4750 50  0001 C CNN
+F 4 "0402WGF1003TCE" V 4200 4750 50  0001 C CNN "Part Number"
+F 5 "C25741" V 4200 4750 50  0001 C CNN "LCSC Part Number"
+	1    4200 4750
 	-1   0    0    1   
 $EndComp
-Text Label 2000 -1150 2    50   ~ 0
+Text Label 4150 4250 2    50   ~ 0
 DCDC_PS
 $Comp
 L power:GND #PWR0153
 U 1 1 610C0981
-P 2300 -950
-F 0 "#PWR0153" H 2300 -1200 50  0001 C CNN
-F 1 "GND" H 2300 -1100 50  0000 C CNN
-F 2 "" H 2300 -950 50  0001 C CNN
-F 3 "" H 2300 -950 50  0001 C CNN
-	1    2300 -950
+P 4200 4850
+F 0 "#PWR0153" H 4200 4600 50  0001 C CNN
+F 1 "GND" H 4200 4700 50  0000 C CNN
+F 2 "" H 4200 4850 50  0001 C CNN
+F 3 "" H 4200 4850 50  0001 C CNN
+	1    4200 4850
 	1    0    0    -1  
 $EndComp
 $Comp
 L Jumper:SolderJumper_2_Bridged JP1
 U 1 1 610CCBE8
-P 2150 -1150
-F 0 "JP1" H 2150 -945 50  0000 C CNN
-F 1 "dcdc_ps_pulldown" H 2150 -1036 50  0000 C CNN
-F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 2150 -1150 50  0001 C CNN
-F 3 "~" H 2150 -1150 50  0001 C CNN
-	1    2150 -1150
-	1    0    0    -1  
+P 4200 4450
+F 0 "JP1" V 4150 4250 50  0000 L CNN
+F 1 "dcdc_ps_pulldown" V 4350 3950 50  0000 L CNN
+F 2 "Jumper:SolderJumper-2_P1.3mm_Bridged_RoundedPad1.0x1.5mm" H 4200 4450 50  0001 C CNN
+F 3 "~" H 4200 4450 50  0001 C CNN
+	1    4200 4450
+	0    1    1    0   
 $EndComp
 $Comp
 L power:GND #PWR0154
 U 1 1 611F61E4
-P -3800 6200
-F 0 "#PWR0154" H -3800 5950 50  0001 C CNN
-F 1 "GND" H -3800 6050 50  0000 C CNN
-F 2 "" H -3800 6200 50  0001 C CNN
-F 3 "" H -3800 6200 50  0001 C CNN
-	1    -3800 6200
+P 9000 3750
+F 0 "#PWR0154" H 9000 3500 50  0001 C CNN
+F 1 "GND" H 9000 3600 50  0000 C CNN
+F 2 "" H 9000 3750 50  0001 C CNN
+F 3 "" H 9000 3750 50  0001 C CNN
+	1    9000 3750
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	-3800 6200 -3800 6100
+	9000 3750 9000 3650
 Wire Wire Line
-	-3800 6100 -3650 6100
-NoConn ~ -2250 4400
-NoConn ~ -2250 4750
-NoConn ~ -2250 4850
-NoConn ~ -2250 4950
-NoConn ~ -2250 5050
-NoConn ~ -2250 5150
-NoConn ~ -2250 5250
+	9000 3650 9150 3650
+NoConn ~ -3450 5350
+NoConn ~ -3450 5700
+NoConn ~ -3450 5800
+NoConn ~ -3450 5900
+NoConn ~ -3450 6000
+NoConn ~ -3450 6100
+NoConn ~ -3450 6200
+$Sheet
+S 5750 6550 850  1050
+U 61515905
+F0 "scale" 50
+F1 "scale.sch" 50
+F2 "HX711_DT" B R 6600 6650 50 
+F3 "HX711_SCK" B R 6600 6750 50 
+F4 "CAP_TOUCH_TIMER" B R 6600 6900 50 
+F5 "CAP_TOUCH_TARE" B R 6600 7000 50 
+F6 "CAP_TOUCH_POWER" B R 6600 7100 50 
+F7 "TM163x_DIO" B R 6600 7300 50 
+F8 "TM163x_CLK" B R 6600 7400 50 
+F9 "TM163x_STB" B R 6600 7500 50 
+$EndSheet
+Text Label 6600 7100 0    50   ~ 0
+io14
+Text Label 6600 7000 0    50   ~ 0
+io12
+Text Label -1750 5950 0    50   ~ 0
+io33
+Text Label 4100 6400 0    50   ~ 0
+sensor_vn
+Text GLabel 8500 1050 2    50   Input ~ 0
+SWITCHED_3v3
+Text GLabel 8950 2850 0    50   Input ~ 0
+SWITCHED_3v3
+Text Label 6600 6900 0    50   ~ 0
+io13
+Text Label 9150 3150 2    50   ~ 0
+io5
+Text Label 6600 6750 0    50   ~ 0
+io22
+Text Label 6600 6650 0    50   ~ 0
+io21
+Text Label 8000 2850 2    50   ~ 0
+io33
+Text Label 4100 6550 0    50   ~ 0
+sensor_capp
+Text Label 6600 7400 0    50   ~ 0
+io18
+Text Label 6600 7300 0    50   ~ 0
+io23
+Text Label 6600 7500 0    50   ~ 0
+io5
+Text Notes 1000 5300 2    50   ~ 0
+USB-UART
+Wire Notes Line
+	550  5200 3100 5200
+Wire Notes Line
+	3100 5200 3100 7650
+Wire Notes Line
+	3100 7650 550  7650
+Wire Notes Line
+	550  7650 550  5200
+Wire Wire Line
+	4150 4250 4200 4250
+Wire Wire Line
+	4200 4250 4200 4300
+Wire Wire Line
+	4200 4600 4200 4650
+Text Notes 3650 4150 0    50   ~ 0
+This defaults the DC-\nDC to use powersave\nmode which is likely\nnot sufficient for \nWiFi. Jumper to \nallow cutting in case \nit can't even boot
+Wire Wire Line
+	8950 2850 9150 2850
+Wire Wire Line
+	8850 2700 8850 2750
+Wire Wire Line
+	8850 2750 9150 2750
+Wire Wire Line
+	9150 2450 9050 2450
+Wire Wire Line
+	9050 2450 9050 2650
+Wire Wire Line
+	3900 7000 4100 7000
+Text Label 4100 7150 0    50   ~ 0
+sensor_vp
+Wire Wire Line
+	4100 7150 3900 7150
+NoConn ~ 3900 7150
 $EndSCHEMATC

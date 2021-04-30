@@ -1,4 +1,4 @@
-update=Sat 17 Apr 2021 22:05:28 BST
+update=Mon Apr 26 00:48:53 2021
 version=1
 last_client=kicad
 [general]
@@ -12,6 +12,16 @@ NetIExt=net
 version=1
 LibDir=
 [eeschema/libraries]
+[schematic_editor]
+version=1
+PageLayoutDescrFile=
+PlotDirectoryName=
+SubpartIdSeparator=0
+SubpartFirstId=65
+NetFmtName=Pcbnew
+SpiceAjustPassiveValues=0
+LabSize=50
+ERC_TestSimilarLabels=1
 [pcbnew]
 version=1
 PageLayoutDescrFile=
@@ -29,12 +39,14 @@ MinMicroViaDiameter=0.2
 MinMicroViaDrill=0.09999999999999999
 MinHoleToHole=0.47
 TrackWidth1=0.25
-TrackWidth2=0.3
-TrackWidth3=0.4
-TrackWidth4=0.45
-TrackWidth5=0.5
-TrackWidth6=0.65
-TrackWidth7=1.1
+TrackWidth2=0.1777
+TrackWidth3=0.3
+TrackWidth4=0.38
+TrackWidth5=0.4
+TrackWidth6=0.45
+TrackWidth7=0.5
+TrackWidth8=0.65
+TrackWidth9=1.1
 ViaDiameter1=0.8
 ViaDrill1=0.4
 ViaDiameter2=0.8
@@ -62,7 +74,7 @@ OthersTextSizeH=1
 OthersTextSizeThickness=0.15
 OthersTextItalic=0
 OthersTextUpright=1
-SolderMaskClearance=0.05
+SolderMaskClearance=0
 SolderMaskMinWidth=0
 SolderPasteClearance=0
 SolderPasteRatio=-0
@@ -244,13 +256,3 @@ uViaDrill=0.1
 dPairWidth=0.2
 dPairGap=0.25
 dPairViaGap=0.25
-[schematic_editor]
-version=1
-PageLayoutDescrFile=
-PlotDirectoryName=
-SubpartIdSeparator=0
-SubpartFirstId=65
-NetFmtName=Pcbnew
-SpiceAjustPassiveValues=0
-LabSize=50
-ERC_TestSimilarLabels=1
