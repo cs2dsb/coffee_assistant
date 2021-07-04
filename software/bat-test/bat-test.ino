@@ -7,7 +7,8 @@
 #include <FS.h>
 #define SPIFFS LITTLEFS
 #include <LITTLEFS.h>
-
+#include <lwip/sockets.h>
+#include <sys/ioctl.h>
 
 #include <PubSubClient.h>
 #include <AsyncTCP.h>
@@ -132,17 +133,39 @@ void loop() {
 
     if (SLEEP) {
         serial_printf("flushing before sleep\n");
+        //int sockfd = wifi_client.fd();
+
+        mqtt_client.publish(mqtt_topic, "spunk hair");
+        wifi_client.flush();
         mqtt_client.disconnect();
+        /*
         while (mqtt_client.state() != MQTT_DISCONNECTED){
             delay(10);
         }
-        wifi_client.flush();
         wifi_client.stop();
         while (wifi_client.connected()) {
             delay(10);
         }
         // You'd think flush & stop would be sufficient but apparently not
-        delay(200);
+        //delay(2000);
+        */
+
+        // int sock_res;
+        // socklen_t len = (socklen_t)sizeof(sock_res);
+
+        // int res = getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &sock_res, &len);
+
+        // //if (res < 0) {
+        // log_e("getsockopt on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(errno));
+
+        // lwip_close_r(sockfd);
+
+        // for (int i = 0; i < 10; i++) {
+        //     res = getsockopt(sockfd, SOL_SOCKET, SO_TYPE, &sock_res, &len);
+        //     log_e("getsockopt on fd %d, errno: %d, \"%s\"", sockfd, errno, strerror(sock_res));
+        //     delay(100);
+        // }
+
 
         serial_printf("sleeping now\n");
         esp_wifi_stop();
@@ -410,6 +433,9 @@ bool mqtt_client_connect(void) {
         serial_printf("Attempting MQTT connection...\n");
         if (mqtt_client.connect(mqtt_id)) {
             serial_printf("connected\n");
+
+            serial_printf("disabling nagle's\n");
+            wifi_client.setNoDelay(true);
         } else {
             serial_printf("connection failed\n");
             return false;

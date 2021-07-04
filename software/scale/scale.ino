@@ -1,81 +1,28 @@
 #include <stdlib.h>
 #include <stdarg.h>
-#include <WiFi.h>
-#include <WiFiClient.h>
 #include <ESPmDNS.h>
-#include <esp_wifi.h>
 #include <FS.h>
 #define SPIFFS LITTLEFS
 #include <LITTLEFS.h>
 #include <EEPROM.h>
-#include <freertos/queue.h>
 
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <AsyncElegantOTA.h>
 
+#include <TM1638plus.h>
 #include <HX711_ADC.h>
 
 #include "credentials.h"
 #include "static/routes.h"
 #include "handlers.h"
 #include "utils.h"
-
-
-// The built in static file handler is probably better but
-// it doesn't log anything which can be useful to make sure
-// clients are really requesting files rather than using cached
-#define USE_BUILTIN_STATIC              true
-#define WAIT_FOR_SERIAL                 true
-#define BAUD                            115200
-#define SERIAL_BUF_LEN                  255
-//#define WIFI_MODE                     WIFI_AP_STA
-#define WIFI_MODE                       WIFI_STA
-#define WIFI_POWERSAVING_MODE           WIFI_PS_NONE
-#define WAIT_FOR_WIFI                   false
-#define WIFI_TIMEOUT_SECONDS            30
-#define BLINK_INTERVAL                  1000
-#define HX711_POLL_INTERVAL             500
-#define WS_MESSAGE_INTERVAL             200
-#define SERIAL_LOG_INTERVAL             10000
-#define WIFI_STATUS_UPDATE_INTERVAL     1000
-#define TIMER_INTERVAL                  100
-#define HTTP_PORT                       80
-#define DEFAULT_CALIBRATION             3753.989990
-
-#define PIN_TARE                        26
-#define PIN_CAL                         27
-
-#define PIN_HX711_DT                    14
-#define PIN_HX711_SCK                   12
-
-#define PIN_LED                         21
-
-// EEPROM is actually emulated using a flash 'partition' that's bigger than 512
-#define EEPROM_SIZE                     512
-#define EEPROM_VAL_VALID_ADDR           0
-#define EEPROM_CAL_ADDR                 4
-#define EEPROM_VAL_VALID_VALUE          0xCAFEBEEF
-
-// The amount (in calibrated units, grams typically) to wait for to detect the
-// start of a weighing event
-#define WEIGHT_CHANGE_THRESHOLD         0.3
-#define KNOWN_CALIBRATION_MASS_DEFAULT  100.0
-#define WEIGHT_HYSTERESIS               0.1
-#define WEIGHT_START_DELTA              0.2
-#define WEIGHT_EMA_FACTOR_1             0.95
-#define WEIGHT_EMA_FACTOR_2             0.9
-#define WEIGHT_EMA_FACTOR_3             0.6
-#define WEIGHT_EMA_FACTOR_4             0.05
-#define WEIGHT_IDLE_TIMEOUT             2.0
-
-// From credentials.h
-const char* host            = MDNS_HOST;
-const char* ssid            = WIFI_SSID;
-const char* password        = WIFI_PASSWORD;
-
-const char* cal_command     = "do-calibrate";
-const char* tare_command    = "do-tare";
+#include "board.h"
+#include "analog.h"
+#include "wifi.h"
+#include "mqtt.h"
+#include "config.h"
+#include "buttons.h";
 
 // How much the calibration weight is
 float known_mass            = KNOWN_CALIBRATION_MASS_DEFAULT;
@@ -90,7 +37,6 @@ struct measurement {
 
 // Global variables
 unsigned long last_blink_millis = 0;
-int last_blink_state = LOW;
 
 unsigned long last_weight_poll_millis = 0;
 float weight_last_change_time         = 0.0;
@@ -103,6 +49,7 @@ float weight_ema_2  = 0.0;
 float weight_ema_3  = 0.0;
 float weight_ema_4  = 0.0;
 
+
 // last time various periodic functions were run
 unsigned long last_serial_log_millis = 0;
 unsigned long last_ws_message_millis = 0;
@@ -111,6 +58,9 @@ unsigned long last_elapsed_millis = 0;
 unsigned long last_timer_update_millis = 0;
 unsigned long last_tare_millis = 0;
 unsigned long last_cal_millis = 0;
+unsigned long last_tm1638_update_millis = 0;
+unsigned long last_batt_broadcast_millis = 0;
+
 
 // elapsed_millis is updated every time loop is called
 unsigned long elapsed_millis = 0;
@@ -119,66 +69,123 @@ float elapsed_seconds = 0;
 // timer is assumed not to be running unless weight is being added to the scale
 bool timer_running = false;
 
-wl_status_t last_wifi_state = WL_DISCONNECTED;
-
 bool tare = false;
 bool calibrate = false;
+bool user_wake = false;
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws_server("/ws");
 
 HX711_ADC hx711(PIN_HX711_DT, PIN_HX711_SCK);
+TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
 
-void setup_spiffs(void);
-void setup_serial(void);
-void setup_server(void);
-void setup_gpio(void);
-void update_elapsed(void);
-void setup_hx711(void);
-void setup_eeprom(void);
-void poll_hx711(void);
-void tare_hx711(bool wait);
-void poll_wifi_status(void);
-void blink(void);
-void process_buttons(byte buttons);
-bool delay_elapsed(unsigned long *last, unsigned long interval);
-void fatal(void);
-float get_cal_from_eeprom(void);
-void save_cal_to_eeprom(float cal);
-void on_websocket_event(AsyncWebSocket * server, AsyncWebSocketClient * client, AwsEventType type, void * arg, uint8_t *data, size_t len);
-void reset_timer(void);
-void send_websocket_measurement(measurement m);
-void update_serial(void);
-void tare_isr(void);
-void cal_isr(void);
 
 void setup() {
     setup_serial();
-    setup_eeprom();
+    //read_wakeup_reason();
+
+    configure_and_calibrate_adc1();
+    panic_on_fail(configure_analog_pins(), "Failed to configure analog pins");
+
     setup_gpio();
+    configure_buttons();
+
+    // Read it before starting any heavy current consuming things
+    read_batt_until_reliable();
+
+    setup_eeprom();
     setup_spiffs();
 
-    setup_hx711();
+    if (user_wake) {
+        setup_tm1638();
+        setup_hx711();
+    }
+
+
+    unsigned long start = millis();
+    unsigned long last = start;
+
+    configure_wifi(WIFI_SSID, WIFI_PASSWORD);
+    last = log_time(last, "configure_wifi");
 
     setup_server();
+    last = log_time(last, "setup_server");
 
-    // Wait while server starts up to let the hx711 stabilize before tareing
-    tare_hx711(true);
+    configure_mqtt(MQTT_URL);
+    last = log_time(last, "configure_mqtt");
+
+    if (user_wake) {
+        // Wait while server starts up to let the hx711 stabilize before tareing
+        tare_hx711(true);
+    }
+
+    if (!user_wake) {
+        fatal_on_fail(wait_for_connection(), "failed to connect to wifi after timeout");
+        last = log_time(last, "wait_for_connection");
+
+        connect_mqtt();
+        last = log_time(last, "connect_mqtt2");
+
+        send_mqtt_data();
+        last = log_time(last, "send_mqtt_data");
+
+        wait_for_outstanding_publishes();
+        last = log_time(last, "outstanding_mqtt_publish_count > 0");
+
+        unsigned long delta = millis() - start;
+
+        serial_printf("connect+send time = %.2f\n", ((float)delta)/1000.);
+        sleep();
+    }
 }
 
 void loop() {
     AsyncElegantOTA.loop();
     ws_server.cleanupClients();
 
-    blink();
-
-    poll_hx711();
+    if (user_wake) {
+        update_tm1638();
+        poll_hx711();
+        update_button_state();
+        handle_buttons();
+    }
 
     update_elapsed();
     update_serial();
-    poll_wifi_status();
+    sample_to_filters();
+    print_wifi_status();
 
     delay(1);
+}
+
+void handle_buttons() {
+    if (is_tare_requested) {
+        tare = true;
+    }
+
+    if (is_calibrate_requested) {
+        calibrate = true;
+    }
+
+    if (is_power_requested &&
+        // Prevent sleep immidately after powering on
+        last_elapsed_millis > 2000)
+    {
+        sleep();
+    }
+}
+
+void sleep(void) {
+    disable_wifi();
+
+    // "Turn off" display (mosfet that would actually kill it is incorrect on prototype)
+    tm1638.displayText("        ");
+
+    serial_printf("sleeping now\n");
+    esp_sleep_enable_touchpad_wakeup();
+    uint64_t sleep_us = DEEP_SLEEP_SECONDS * 1000 * 1000ULL;
+    esp_sleep_enable_timer_wakeup(sleep_us);
+    esp_deep_sleep_start();
 }
 
 void setup_serial(void) {
@@ -193,35 +200,13 @@ void setup_serial(void) {
     }
 
     serial_printf("%s v%s (%s)\n", PROJECT, VERSION, BUILD_TIMESTAMP);
+    setCpuFrequencyMhz(CPU_MHZ);
+    serial_printf("CPU running at %lu\n", getCpuFrequencyMhz());
 }
 
 void setup_server(void) {
-    WiFi.mode(WIFI_MODE);
-    esp_wifi_set_ps(WIFI_POWERSAVING_MODE);
-
-    serial_printf("SSID: '%s'\n", ssid);
-    WiFi.begin(ssid, password);
-
-    if (WAIT_FOR_WIFI) {
-        int timeout = WIFI_TIMEOUT_SECONDS * 1000;
-        wl_status_t status = WiFi.status();
-        while(timeout > 0 && (!status || status >= WL_DISCONNECTED)) {
-            serial_printf("Waiting for wifi (timeout: %d)\n", timeout);
-            delay(500);
-            timeout -= 500;
-            status = WiFi.status();
-        }
-
-        if (status >= WL_DISCONNECTED) {
-            serial_printf("Timeout connecting to wifi. Status: %d\n", status);
-            fatal();
-        } else {
-            serial_printf("Connected\n");
-        }
-    }
-
-    serial_printf("Starting mDNS responder on %s.local\n", host);
-    MDNS.begin(host);
+    serial_printf("Starting mDNS responder on %s.local\n", MDNS_HOST);
+    MDNS.begin(MDNS_HOST);
 
     // Configure websockets
     ws_server.onEvent(on_websocket_event);
@@ -249,17 +234,8 @@ void setup_server(void) {
 }
 
 void setup_gpio(void) {
-    pinMode(PIN_LED, OUTPUT);
-
-    pinMode(PIN_TARE, INPUT);
-    pinMode(PIN_CAL, INPUT);
-
-    attachInterrupt(digitalPinToInterrupt(PIN_TARE), tare_isr, FALLING);
-    attachInterrupt(digitalPinToInterrupt(PIN_CAL), cal_isr, FALLING);
-}
-
-void setup_eeprom(void) {
-    EEPROM.begin(EEPROM_SIZE);
+    pinMode(PIN_EN_BATT_DIVIDER, OUTPUT);
+    digitalWrite(PIN_EN_BATT_DIVIDER, HIGH);
 }
 
 void setup_hx711(void) {
@@ -269,6 +245,15 @@ void setup_hx711(void) {
     hx711.setSamplesInUse(1);
     hx711.start(0);
     hx711.update();
+}
+
+void setup_tm1638(void) {
+    tm1638.displayBegin();
+    tm1638.displayText("booted");
+    tm1638.brightness(1);
+
+    // All LEDs OFF
+    tm1638.setLEDs(0x0000);
 }
 
 void setup_spiffs(void) {
@@ -289,21 +274,10 @@ void tare_hx711(bool wait) {
                || hx711.getSignalTimeoutFlag();
     } while (wait && !hx711.getTareStatus() && !timeout);
 
+
     if (timeout) {
         serial_printf("hx711 tare timed out\n");
         fatal();
-    }
-}
-
-void blink(void) {
-    if (delay_elapsed(&last_blink_millis, BLINK_INTERVAL)) {
-        if (last_blink_state == LOW) {
-          last_blink_state = HIGH;
-        } else {
-          last_blink_state = LOW;
-        }
-
-        digitalWrite(PIN_LED, last_blink_state);
     }
 }
 
@@ -342,6 +316,9 @@ void poll_hx711(void) {
                 hx711.setSamplesInUse(16);
                 hx711.refreshDataSet();
 
+                // Reset cal to prevent NaN/Inf from propagating
+                hx711.setCalFactor(1.0);
+
                 float calibration = hx711.getNewCalibration(known_mass);
                 hx711.setSamplesInUse(1);
                 serial_printf("new calibration: %f\n", calibration);
@@ -355,6 +332,7 @@ void poll_hx711(void) {
             }
 
             weight_new = hx711.getData();
+
 
             // ema 1 is just a gentle smoothing to remove noise/drips/etc
             weight_ema_1 += (weight_new - weight_ema_1) * WEIGHT_EMA_FACTOR_1;
@@ -417,38 +395,6 @@ void poll_hx711(void) {
     }
 }
 
-void poll_wifi_status(void) {
-    if (delay_elapsed(&last_wifi_status_update_millis, WIFI_STATUS_UPDATE_INTERVAL)) {
-        wl_status_t status = WiFi.status();
-        if (last_wifi_state != status) {
-            switch (status) {
-                case WL_IDLE_STATUS:
-                    serial_printf("WiFi idle\n");
-                    break;
-                case WL_NO_SSID_AVAIL:
-                    serial_printf("WiFi no SSID available\n");
-                    break;
-                case WL_SCAN_COMPLETED:
-                    serial_printf("WiFi scan complete\n");
-                    break;
-                case WL_CONNECTED:
-                    serial_printf("WiFi connected\n");
-                    break;
-                case WL_CONNECT_FAILED:
-                    serial_printf("WiFi connection FAILED\n");
-                    break;
-                case WL_CONNECTION_LOST:
-                    serial_printf("WiFi connection LOST\n");
-                    break;
-                case WL_DISCONNECTED:
-                    serial_printf("WiFi disconnected\n");
-                    break;
-            }
-            last_wifi_state = status;
-        }
-    }
-}
-
 void update_serial(void) {
     if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
         serial_printf("Time: %.1f   Weight: %.1f\n", elapsed_seconds, weight_ema_1);
@@ -469,18 +415,53 @@ void update_elapsed(void) {
     }
 }
 
-void process_buttons(byte buttons) {
-    if ((buttons >> 7) & 1 == 1) {
-        tare = true;
-    }
-    if ((buttons >> 6) & 1 == 1) {
-        calibrate = true;
-    }
-    if ((buttons >> 5) & 1 == 1) {
-        elapsed_millis = 0;
+void read_batt_until_reliable(void) {
+    delay(200);
+    for (int i = 0; i < 10; i++) {
+        sample_to_filters();
     }
 }
 
+void update_tm1638(void) {
+    if (delay_elapsed(&last_tm1638_update_millis, TM1638_UPDATE_INTERVAL)) {
+        long seconds = elapsed_millis / 1000;
+        while (seconds > 9999) {
+            seconds -= 9999;
+        }
+
+        char buf[SERIAL_BUF_LEN];
+
+        uint16_t v =  touchRead(PIN_TOUCH_POWER);
+        format(buf, SERIAL_BUF_LEN, "%5.1f%4d", weight_ema_1, seconds);
+
+        if (calibrate) {
+            format(buf, SERIAL_BUF_LEN, "CAL     ");
+        } else if (tare) {
+            format(buf, SERIAL_BUF_LEN, "88888888");
+        }
+
+        tm1638.displayText(buf);
+    }
+}
+
+void read_wakeup_reason(){
+  esp_sleep_wakeup_cause_t wakeup_reason;
+
+  wakeup_reason = esp_sleep_get_wakeup_cause();
+
+  switch(wakeup_reason)
+  {
+    case ESP_SLEEP_WAKEUP_EXT0 : Serial.println("Wakeup caused by external signal using RTC_IO"); break;
+    case ESP_SLEEP_WAKEUP_EXT1 : Serial.println("Wakeup caused by external signal using RTC_CNTL"); break;
+    case ESP_SLEEP_WAKEUP_TIMER : Serial.println("Wakeup caused by timer"); break;
+    case ESP_SLEEP_WAKEUP_TOUCHPAD :
+        Serial.println("Wakeup caused by touchpad");
+        user_wake = true;
+        break;
+    case ESP_SLEEP_WAKEUP_ULP : Serial.println("Wakeup caused by ULP program"); break;
+    default : Serial.printf("Wakeup was not caused by deep sleep: %d\n",wakeup_reason); break;
+  }
+}
 
 float get_cal_from_eeprom(void) {
     unsigned is_valid;
@@ -535,10 +516,10 @@ void on_websocket_event(
     } else if (type == WS_EVT_DATA) {
         serial_printf("WS (id: %u) DATA: %s\n", id, len > 0 ? (char*) data: "");
 
-        if (is_command(cal_command, (char*)data)) {
+        if (is_command(CAL_COMMAND, (char*)data)) {
             serial_printf("WS (id: %u) requested CALIBRATION\n", id);
             calibrate = true;
-        } else if (is_command(tare_command, (char*)data)) {
+        } else if (is_command(TARE_COMMAND, (char*)data)) {
             serial_printf("WS (id: %u) requested TARE\n", id);
             tare = true;
         }
@@ -581,4 +562,25 @@ void cal_isr(void) {
         last_cal_millis = now;
         calibrate = true;
     }
+}
+
+void send_mqtt_data(void) {
+    float batt_v = get_filtered_batt_voltage();
+    float vbus_v = get_filtered_vbus_voltage();
+
+    char buf[SERIAL_BUF_LEN];
+
+    format(buf, SERIAL_BUF_LEN,
+        "{ \"project\": \"%s\", \"build:\": \"%s\", \"mac\": \"%s\", \"battery\": %.2f, \"vbus\": %.2f }",
+        PROJECT,
+        BUILD_TIMESTAMP,
+        mac_address(),
+        batt_v,
+        vbus_v
+    );
+
+    serial_printf("sending batt_v: %.2f\n", batt_v);
+    serial_printf("%s\n", buf);
+
+    mqtt_publish(MQTT_TOPIC, buf);
 }

@@ -1,7 +1,7 @@
-#include <EEPROM.h>
+#ifndef UTILS
+#define UTILS
 
-#ifndef __UTILS__
-#define __UTILS__
+#include <EEPROM.h>
 
 #define SERIAL_BUF_LEN 255
 
@@ -15,115 +15,52 @@
 
 #define EEPROM_FIRST_ADDR               (EEPROM_VALID_ADDR + sizeof(unsigned))
 
-bool __utils_eeprom_init = false;
 
-int format(char* buf, int len, const char *fmt, ...) {
-    va_list pargs;
-    va_start(pargs, fmt);
-    int chars = vsnprintf(buf, len, fmt, pargs);
-    va_end(pargs);
-    return chars;
-}
+int format(char* buf, int len, const char *fmt, ...);
 
-void serial_printf(const char *fmt, ...) {
-    char buf[SERIAL_BUF_LEN];
-    va_list pargs;
-    va_start(pargs, fmt);
-    vsnprintf(buf, SERIAL_BUF_LEN, fmt, pargs);
-    va_end(pargs);
-    Serial.print(buf);
-}
+void serial_printf(const char *fmt, ...);
 
-bool delay_elapsed(unsigned long *last, unsigned long interval) {
-    unsigned long now = millis();
+bool delay_elapsed(unsigned long *last, unsigned long interval);
 
-    if (now - *last >= interval) {
-        *last = now;
-        return true;
-    } else {
-        return false;
-    }
-}
+void fatal();
 
-void fatal() {
-    delay(10000);
-    serial_printf("FATAL: Restarting...\n");
-    ESP.restart();
-}
+void fatal_on_fail(bool ok, const char *msg);
 
-void format_mac(const uint8_t *mac, char *buf, int len) {
-    format(buf, len,
-        "%02x:%02x:%02x:%02x:%02x:%02x",
-        mac[0], mac[1], mac[2],
-        mac[3], mac[4], mac[5]
-    );
-}
+// Panic is a fatal logic error in the program, restarting or retrying won't help
+void panic_on_fail(bool ok, const char *msg);
 
-void print_esp_now_result(esp_err_t result, char *prefix) {
-    if (result == ESP_OK) {
-        serial_printf("%s: success\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-        serial_printf("%s: espnow not init\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_ARG) {
-        serial_printf("%s: invalid argument\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-        serial_printf("%s: internal error\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-        serial_printf("%s: no mem\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-        serial_printf("%s: peer not found\n", prefix);
-    } else {
-        serial_printf("%s: unknown error %d\n", prefix, result);
-    }
-}
+void format_mac(const uint8_t *mac, char *buf, int len);
 
-void setup_eeprom(void) {
-    if (!__utils_eeprom_init) {
-        __utils_eeprom_init = true;
-        EEPROM.begin(EEPROM_SIZE);
-    }
-}
 
-bool is_eeprom_valid(void) {
-    setup_eeprom();
+#ifdef __ESP_NOW_H__
+void print_esp_now_result(esp_err_t result, char *prefix);
+#endif
 
-    unsigned is_valid = 0;
-    EEPROM.get(EEPROM_VALID_ADDR, is_valid);
+void setup_eeprom(void);
 
-    return is_valid == EEPROM_VALID_VALUE;
-}
+bool is_eeprom_valid(void);
 
-void wipe_eeprom(void) {
-    setup_eeprom();
-
-    unsigned valid = 0;
-    EEPROM.put(EEPROM_VALID_ADDR, valid);
-    EEPROM.commit();
-}
+void wipe_eeprom(void);
 
 template<typename T>
-bool read_from_eeprom(int addr, T &out) {
-    setup_eeprom();
-
-    if (is_eeprom_valid()) {
-        EEPROM.get(addr, out);
-        return true;
-    } else {
-        return false;
-    }
-}
+bool read_from_eeprom(int addr, T &out);
 
 template<typename T>
-void write_to_eeprom(int addr, const T &value, bool commit = true) {
-    setup_eeprom();
+void write_to_eeprom(int addr, const T &value, bool commit = true);
 
-    EEPROM.put(addr, value);
+class Filter {
+    private:
+        float m_value;
+        bool m_prime;
+    public:
+        float m_decay;
+        Filter(float decay = 0.1, bool auto_prime = true);
+        void push(float v);
+        void reset(float v);
+        float value();
+};
 
-    if (commit) {
-        unsigned valid = EEPROM_VALID_VALUE;
-        EEPROM.put(EEPROM_VALID_ADDR, valid);
-        EEPROM.commit();
-    }
-}
+
+unsigned long log_time(unsigned long last, char* msg);
 
 #endif

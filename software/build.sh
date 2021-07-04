@@ -14,6 +14,7 @@ PROJECT="${PROJECT:-${1:-skeleton}}"
 FLASH="${FLASH:-false}"
 TEST_HOST="${OTA_HOST:-esp32.local}"
 OTA_HOST="${OTA_HOST:-}"
+BUILD="${BUILD:-true}"
 
 if [ "$FLASH" == "true" ] && [ "$OTA_HOST" != "" ]; then
     echo "Both FLASH=true and OTA_HOST provided, only one supported at a time" >&2
@@ -30,6 +31,10 @@ fi
 # spiffs is first because it doesn't trigger a restart if it's done OTA
 ./spiffs.sh "$PROJECT"
 
+MQTT_IP=${MQTT_IP:-0,0,0,0}
+MQTT_PORT=${MQTT_PORT:-1883}
+MQTT_URL="mqtt://`echo ${MQTT_IP} | tr ',' '.'`:${MQTT_PORT}"
+
 cat > credentials.h <<- EOF
 #define PROJECT         "${PROJECT}"
 #define VERSION         "${VERSION:-0.0.1}"
@@ -37,8 +42,9 @@ cat > credentials.h <<- EOF
 #define MDNS_HOST       "${WIFI_HOST:-esp32}"
 #define WIFI_SSID       "${WIFI_SSID:-}"
 #define WIFI_PASSWORD   "${WIFI_PASSWORD:-}"
-#define MQTT_IP         ${MQTT_IP:-0,0,0,0}
-#define MQTT_PORT         ${MQTT_PORT:-1883}
+#define MQTT_IP         ${MQTT_IP}
+#define MQTT_PORT       ${MQTT_PORT}
+#define MQTT_URL        "${MQTT_URL}"
 EOF
 
 A_CLI=third_party/arduino-cli/arduino-cli
@@ -50,13 +56,15 @@ echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Building \"${PROJECT}\"...\n$(tput 
 
 set +o errexit
 
-$A_CLI $A_CFG compile \
-    --fqbn "$FQBN" \
-    --build-path $A_BUILD \
-    --build-cache-path $A_BUILD/cache \
-    --build-property "build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL=5" \
-    "$PROJECT"
-    #build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug}
+if [ "$BUILD" == "true" ]; then
+    $A_CLI $A_CFG compile \
+        --fqbn "$FQBN" \
+        --build-path $A_BUILD \
+        --build-cache-path $A_BUILD/cache \
+        --build-property "build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL=5" \
+        "$PROJECT"
+        #build.extra_flags=-DESP32 -DCORE_DEBUG_LEVEL={build.code_debug}
+fi
 
 
 if [ "$?" == "0" ]; then

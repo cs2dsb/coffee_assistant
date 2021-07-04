@@ -14,6 +14,7 @@ set -o pipefail
 
 PROJECT="${1:-skeleton}"
 WATCH="${WATCH:-false}"
+BUILD_WEB="${BUILD_WEB:-true}"
 
 source ./env.sh 2>/dev/null
 
@@ -26,7 +27,7 @@ WEB="${PROJECT_DIR}/web"
 STATIC="${PROJECT_DIR}/static"
 YARN="${WEB}/node_modules/yarn/bin/yarn"
 
-if test -d "$WEB"; then
+if test -d "$WEB" && [ "$BUILD_WEB" == "true" ]; then
     cd "$WEB"
 
     export PATH="$NODE_BIN_DIR:$PATH"

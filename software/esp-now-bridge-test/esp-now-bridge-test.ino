@@ -178,6 +178,9 @@ bool mqtt_client_connect(void) {
         if (!mqtt_client.connect(mqtt_id)) {
             serial_printf("mqtt connection failed\n");
             return false;
+        } else {
+            serial_printf("disabling nagle's\n");
+            wifi_client.setNoDelay(true);
         }
     }
     return true;

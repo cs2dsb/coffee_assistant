@@ -20,6 +20,8 @@ GIT_LIBRARIES=(
     "olkal/HX711_ADC"
     "lorol/LITTLEFS"
     "knolleary/pubsubclient"
+    "paulstoffregen/OneWire"
+    "milesburton/Arduino-Temperature-Control-Library"
 )
 
 source ./env.sh 2>/dev/null

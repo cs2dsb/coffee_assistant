@@ -10,7 +10,7 @@ if ! command -v inotifywait >/dev/null 2>&1; then
 fi
 
 PROJECT="${1:-skeleton}"
-FILES="${FILES:-$PROJECT third_party build.sh .env .env_shared arduino-cli.yml utils.h handlers.h}"
+FILES="${FILES:-$PROJECT third_party build.sh .env .env_shared arduino-cli.yml utils.* handlers.h}"
 FLASH="${FLASH:-false}"
 MONITOR="${MONITOR:-false}"
 
@@ -47,7 +47,7 @@ while true; do
         if [ "$SERIAL_PORT" == "" ]; then
             echo -e "$(tput setaf 0)$(tput setab 1)\n\n  Monitoring failed to find a serial port \n$(tput sgr0)"
         else
-            echo -e "$(tput setaf 0)$(tput setab 4)\n\n  Monitoring \n$(tput sgr0)"
+            echo -e "$(tput setaf 0)$(tput setab 4)\n\n  Monitoring (baud = $TTY_BAUD) \n$(tput sgr0)"
             stty -F $SERIAL_PORT raw speed $TTY_BAUD
             cat $SERIAL_PORT &
             MONITOR_JOB="$!"
