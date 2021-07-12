@@ -2,19 +2,20 @@
 #define UTILS
 
 #include <EEPROM.h>
+#include "config.h"
 
-#define SERIAL_BUF_LEN 255
+typedef int channel_t;
+typedef bool channel_locked_t;
+typedef uint8_t mac_addr_t[6];
+struct static_ip_data {
+    uint32_t ip;
+    uint32_t gateway;
+    uint32_t subnet;
+    uint32_t dns;
+};
 
-// EEPROM is actually emulated using a flash 'partition' that's bigger than 512
-#define EEPROM_SIZE                     512
 
-// This address + magic value is used to determine if the contents of the EEPROM
-// has been set by the app or if it's random junk
-#define EEPROM_VALID_ADDR               0
-#define EEPROM_VALID_VALUE              0xCAFEBEEF
-
-#define EEPROM_FIRST_ADDR               (EEPROM_VALID_ADDR + sizeof(unsigned))
-
+void configure_general(void);
 
 int format(char* buf, int len, const char *fmt, ...);
 
@@ -31,11 +32,6 @@ void panic_on_fail(bool ok, const char *msg);
 
 void format_mac(const uint8_t *mac, char *buf, int len);
 
-
-#ifdef __ESP_NOW_H__
-void print_esp_now_result(esp_err_t result, char *prefix);
-#endif
-
 void setup_eeprom(void);
 
 bool is_eeprom_valid(void);
@@ -43,21 +39,42 @@ bool is_eeprom_valid(void);
 void wipe_eeprom(void);
 
 template<typename T>
-bool read_from_eeprom(int addr, T &out);
+bool read_from_eeprom(int addr, T &out) {
+    setup_eeprom();
+
+    if (is_eeprom_valid()) {
+        EEPROM.get(addr, out);
+        return true;
+    } else {
+        return false;
+    }
+}
 
 template<typename T>
-void write_to_eeprom(int addr, const T &value, bool commit = true);
+void write_to_eeprom(int addr, const T &value, bool commit = true) {
+    setup_eeprom();
+
+    EEPROM.put(addr, value);
+
+    if (commit) {
+        unsigned valid = EEPROM_VAL_VALID_VALUE;
+        EEPROM.put(EEPROM_VAL_VALID_ADDR, valid);
+        EEPROM.commit();
+    }
+}
 
 class Filter {
     private:
         float m_value;
         bool m_prime;
+        int m_count;
     public:
         float m_decay;
         Filter(float decay = 0.1, bool auto_prime = true);
         void push(float v);
         void reset(float v);
         float value();
+        int count();
 };
 
 

@@ -1,0 +1,144 @@
+while psql -U postgres -d mqtt-bridge --tuples-only -P format=unaligned -v "ON_ERROR_STOP=1" -c "SELECT count(*) FROM messages"; do sleep 1; done
+
+psql -U postgres -d mqtt-bridge --tuples-only -P format=unaligned -v "ON_ERROR_STOP=1" -c "SELECT count(*) FROM messages"; do sleep 1; done
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        --tuples-only \
+        -P format=unaligned \
+        -c "SELECT * FROM messages ORDER BY timestamp DESC LIMIT 10"
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        --tuples-only \
+        -P format=unaligned \
+        -c "DELETE FROM messages"
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        -c "SELECT timestamp, cast(message as json)->>'temperature' as temperature \
+        FROM messages \
+        WHERE topic = 'dallas' \
+        ORDER BY timestamp DESC"
+
+        --tuples-only \
+         \
+        LIMIT 10" \
+        | gnuplot -p -e "plot '/dev/stdin' set datafile separator '|' set xdata time using 0:1 with linespoints"
+
+
+mosquitto_sub -h 192.168.0.34 -p 1883 -t /#
+
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        -c "SELECT
+                 timestamp
+                , cast(message as json)->>'battery' as battery
+                --, cast(message as json)->>'mac' as mac
+            FROM messages
+            WHERE
+                    cast(message as json)->>'battery' IS NOT NULL
+                AND (cast(message as json)->>'vbus' IS NULL
+                    OR cast(cast(message as json)->>'vbus' as float) < 3)
+                AND timestamp > '2021-07-03 21:30'
+                AND cast(message as json)->>'mac' = '50:02:91:AA:BB:60'
+            ORDER BY timestamp ASC" \
+        --tuples-only \
+        -P pager=off
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        -c "DELETE \
+        FROM messages \
+        WHERE \
+            message LIKE '%: esp%'"
+
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        -c "SELECT DISTINCT id, message \
+        FROM messages" \
+        --tuples-only \
+        -P pager=off
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        -c "DELETE \
+        FROM messages
+        WHERE NOT is_valid_json(message)" \
+        --tuples-only \
+        -P pager=off
+
+
+export NOMAD_ADDR=http://192.168.0.104:4646; \
+nomad exec \
+    $(nomad job status -verbose postgres \
+        | grep Allocations -A 2 \
+        | tail -n 1 \
+        | cut -d' ' -f1) \
+    psql \
+        -U postgres \
+        -d mqtt-bridge \
+        -c 'create or replace function is_valid_json(p_json text)
+              returns boolean
+            as
+            $$
+            begin
+              return (p_json::json is not null);
+            exception
+              when others then
+                 return false;
+            end;
+            $$
+            language plpgsql
+            immutable;'

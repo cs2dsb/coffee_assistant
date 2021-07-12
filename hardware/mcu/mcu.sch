@@ -1468,27 +1468,6 @@ F 5 "C115357" H 10050 3700 50  0001 C CNN "LCSC Part Number"
 $EndComp
 Text Label 10250 3800 0    50   ~ 0
 io0
-$Comp
-L Device:C_Small C17
-U 1 1 6118867F
-P 10050 3850
-F 0 "C17" V 10100 3700 50  0000 L CNN
-F 1 "100nF" V 10100 3900 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0402_1005Metric" H 10050 3850 50  0001 C CNN
-F 3 "~" H 10050 3850 50  0001 C CNN
-F 4 "CL05B104KO5NNNC" H 10050 3850 50  0001 C CNN "Part Number"
-F 5 "C1525" H 10050 3850 50  0001 C CNN "LCSC Part Number"
-	1    10050 3850
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	10150 3850 10250 3850
-Wire Wire Line
-	10250 3850 10250 3700
-Wire Wire Line
-	9950 3850 9850 3850
-Wire Wire Line
-	9850 3850 9850 3800
 Text Label 10600 2550 0    50   ~ 0
 io0
 Text Label 10500 3600 2    50   ~ 0
@@ -1530,7 +1509,6 @@ Wire Wire Line
 	10600 3800 10700 3800
 Wire Wire Line
 	9750 3800 9850 3800
-Connection ~ 9850 3800
 Wire Wire Line
 	9850 3800 9850 3700
 Text Label 11100 3800 0    50   ~ 0
@@ -2257,7 +2235,7 @@ Wire Wire Line
 	10550 1900 10300 1900
 Wire Wire Line
 	10300 1900 10300 2000
-Text Label 4100 6250 0    50   ~ 0
+Text Label 4150 6250 0    50   ~ 0
 io16
 Text Label 9150 3450 2    50   ~ 0
 io21
@@ -2399,4 +2377,18 @@ sensor_vp
 Wire Wire Line
 	4100 7150 3900 7150
 NoConn ~ 3900 7150
+Text Notes 12450 1050 0    79   ~ 0
+CAN'T USE io16 IT IS FLASH
+Text Notes 12600 1400 0    79   ~ 0
+CAN'T USE io17 IT IS FLASH
+Text Notes 12350 1700 0    79   ~ 0
+VPP(16) NEEDS CAP TO PROGRAM EEPROM
+Text Notes 12450 500  0    79   ~ 0
+Brownout on LDO? Even more caps?
+Text Notes 13250 600  0    79   ~ 0
+LDO is only 200MA so it browns out sometimes
+Wire Wire Line
+	10250 3700 10250 3800
+Text Notes 12350 2050 0    79   ~ 0
+Add battery discharge protection
 $EndSCHEMATC

@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 
+BUILD_WEB="${BUILD_WEB:-true}"
+if [ "$BUILD_WEB" != "true" ]; then
+    exit 0
+fi
+
 # Only run one at a time
-[ "${FLOCKER}" != "$0" ] && exec env FLOCKER="$0" flock -e "$0" "$0" "$@" || :
+# [ "${FLOCKER}" != "$0" ] && exec env FLOCKER="$0" flock -e "$0" "$0" "$@" || :
 
 # Exit when any command fails
 set -o errexit
@@ -14,7 +19,6 @@ set -o pipefail
 
 PROJECT="${1:-skeleton}"
 WATCH="${WATCH:-false}"
-BUILD_WEB="${BUILD_WEB:-true}"
 
 source ./env.sh 2>/dev/null
 

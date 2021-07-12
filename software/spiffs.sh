@@ -123,6 +123,7 @@ EOF
             continue;
         fi
 
+            #-o -name \*.js.map \
         readarray -d '' FILES < <(cd "$path"; find -L . -type f \( \
                -name \*.js   \
             -o -name \*.html \
@@ -131,7 +132,6 @@ EOF
             -o -name \*.png  \
             -o -name \*.gif  \
             -o -name \*.jpg  \
-            -o -name \*.js.map \
             \) -print0)
 
         for i in "${!FILES[@]}"; do
@@ -228,6 +228,11 @@ if test -d "$SPIFFS_DIR"; then
     ESPTOOL="`find .arduino15 -name esptool.py -type f | head -n 1`"
 
     "$MKSPIFFS" -c "$SPIFFS_DIR" -b 4096 -p 256 -s $SPIFFS_SIZE "$SPIFFS_BIN"
+    if [ "$?" != "0" ]; then
+        echo -e "$(tput setaf 0)$(tput setab 1)\n\n Packing SPIFFS failed \n$(tput sgr0)"
+        exit 1
+    fi
+
 
     if [ "$SPIFFS_DIFF" == "true" ] || [ "$FORCE" == "true" ]; then
         SERIAL_PORT=""

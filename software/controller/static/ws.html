@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Websocket example</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+<body>
+    <h1>Websocket example</h1>
+    <div id="logDiv"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js" integrity="sha512-B4skI5FiLurS86aioJx9VfozI1wjqrn6aTdJH+YQUmCZum/ZibPBTX55k5d9XM6EsKePDInkLVrN7vPmJxc1qA==" crossorigin="anonymous"></script>
+    <script src="/js/events.js"></script>
+    <script src="/js/ws.js"></script>
+    <script type="text/javascript">
+        const logDiv = document.querySelector('#logDiv');
+
+        const append_log = function(text) {
+            var logEntry = document.createElement('p');
+            logEntry.innerHTML = text;
+            while (logDiv.children.length > 99) {
+              logDiv.children[0].remove();
+            }
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        };
+
+        window.events.on("websocket_json", (json) => {
+            console.log("Got json from websocket", json);
+            append_log(JSON.stringify(json));
+        });
+    </script>
+</body>
+</html>
+

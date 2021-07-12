@@ -16,6 +16,11 @@ TEST_HOST="${OTA_HOST:-esp32.local}"
 OTA_HOST="${OTA_HOST:-}"
 BUILD="${BUILD:-true}"
 
+if ! test -d "$PROJECT"; then
+    echo "'$PROJECT' directory doesn't exist" >&2
+    exit 1
+fi
+
 if [ "$FLASH" == "true" ] && [ "$OTA_HOST" != "" ]; then
     echo "Both FLASH=true and OTA_HOST provided, only one supported at a time" >&2
     exit 1
@@ -39,7 +44,7 @@ cat > credentials.h <<- EOF
 #define PROJECT         "${PROJECT}"
 #define VERSION         "${VERSION:-0.0.1}"
 #define BUILD_TIMESTAMP "`date +"%Y-%m-%d %H:%M:%S"`"
-#define MDNS_HOST       "${WIFI_HOST:-esp32}"
+#define MDNS_HOST       "${WIFI_HOST:-esp32}-${PROJECT}"
 #define WIFI_SSID       "${WIFI_SSID:-}"
 #define WIFI_PASSWORD   "${WIFI_PASSWORD:-}"
 #define MQTT_IP         ${MQTT_IP}
@@ -57,6 +62,23 @@ echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Building \"${PROJECT}\"...\n$(tput 
 set +o errexit
 
 if [ "$BUILD" == "true" ]; then
+
+    # This links all cpp and h files from the 'shared' directory into the project
+    # directory to overcome the arduino shortcomming of all source files needing
+    # to be siblings of the .ino
+    readarray -d '' FILES < <(cd "shared"; find -L . -type f \( \
+           -name \*.cpp \
+        -o -name \*.h \
+        \) -print0)
+    for i in "${!FILES[@]}"; do
+        F="${FILES[$i]}"
+        F="${F:2}"
+        LINK="$PROJECT/$F"
+        if ! test -f "$LINK"; then
+            ln -s "../shared/$F" "$LINK"
+        fi
+    done
+
     $A_CLI $A_CFG compile \
         --fqbn "$FQBN" \
         --build-path $A_BUILD \

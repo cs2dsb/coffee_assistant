@@ -12,7 +12,6 @@
 
 #include <TM1638plus.h>
 #include <HX711_ADC.h>
-
 #include "credentials.h"
 #include "static/routes.h"
 #include "handlers.h"
@@ -23,6 +22,8 @@
 #include "mqtt.h"
 #include "config.h"
 #include "buttons.h";
+#include "now.h";
+#include "messages.h";
 
 // How much the calibration weight is
 float known_mass            = KNOWN_CALIBRATION_MASS_DEFAULT;
@@ -71,7 +72,7 @@ bool timer_running = false;
 
 bool tare = false;
 bool calibrate = false;
-bool user_wake = false;
+bool user_wake = true;
 
 AsyncWebServer server(HTTP_PORT);
 AsyncWebSocket ws_server("/ws");
@@ -82,7 +83,7 @@ TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FR
 
 void setup() {
     setup_serial();
-    //read_wakeup_reason();
+    read_wakeup_reason();
 
     configure_and_calibrate_adc1();
     panic_on_fail(configure_analog_pins(), "Failed to configure analog pins");
@@ -101,18 +102,27 @@ void setup() {
         setup_hx711();
     }
 
-
     unsigned long start = millis();
     unsigned long last = start;
 
-    configure_wifi(WIFI_SSID, WIFI_PASSWORD);
-    last = log_time(last, "configure_wifi");
 
-    setup_server();
-    last = log_time(last, "setup_server");
+    configure_wifi(NULL, NULL, WIFI_STA, WIFI_PS_MIN_MODEM, false, false);
+    configure_now(true, false, false);
+    now_set_on_receive(&now_on_receive);
 
-    configure_mqtt(MQTT_URL);
-    last = log_time(last, "configure_mqtt");
+    // configure_wifi(WIFI_SSID, WIFI_PASSWORD);
+    // last = log_time(last, "configure_wifi");
+
+    // // scan is off currently because there's a direct wifi connection, which would conflict
+    // // with the channel switching of the scan
+    // configure_now();
+    // last = log_time(last, "configure_now");
+
+    // setup_server();
+    // last = log_time(last, "setup_server");
+
+    // configure_mqtt(MQTT_URL);
+    // last = log_time(last, "configure_mqtt");
 
     if (user_wake) {
         // Wait while server starts up to let the hx711 stabilize before tareing
@@ -154,23 +164,25 @@ void loop() {
     update_serial();
     sample_to_filters();
     print_wifi_status();
+    now_update();
 
     delay(1);
 }
 
 void handle_buttons() {
-    if (is_tare_requested) {
+    if (is_tare_requested()) {
         tare = true;
     }
 
-    if (is_calibrate_requested) {
+    if (is_calibrate_requested()) {
         calibrate = true;
     }
 
-    if (is_power_requested &&
+    if (is_power_requested() &&
         // Prevent sleep immidately after powering on
         last_elapsed_millis > 2000)
     {
+        serial_printf("power button pressed. going to sleep\n");
         sleep();
     }
 }
@@ -307,6 +319,7 @@ void poll_hx711(void) {
                 reset_timer();
 
                 ws_server.textAll("{ \"tare\": true }");
+                now_send_to_bridge(TARE_COMMAND_PREFIX);
             }
 
             if (calibrate) {
@@ -350,39 +363,39 @@ void poll_hx711(void) {
             // tends to bounce a bit as drips land and cause the scale to wobble)
             bool change = abs(weight_ema_2 - weight_ema_3) > WEIGHT_HYSTERESIS;
 
-            if (!timer_running && start) {
-                reset_timer();
-                timer_running = true;
-                weight_peak = 0.0;
+            // if (!timer_running && start) {
+            //     reset_timer();
+            //     timer_running = true;
+            //     weight_peak = 0.0;
 
-                // More fudging required here perhaps?
-                weight_start = weight_ema_4;
-            }
+            //     // More fudging required here perhaps?
+            //     weight_start = weight_ema_4;
+            // }
 
-            if (timer_running) {
-                if (change) {
-                    weight_last_change_time = elapsed_seconds;
-                    if (weight_ema_1 > weight_peak) {
-                        weight_peak = weight_ema_1;
-                    }
-                } else if (elapsed_seconds - weight_last_change_time > WEIGHT_IDLE_TIMEOUT) {
-                    timer_running = false;
+            // if (timer_running) {
+            //     if (change) {
+            //         weight_last_change_time = elapsed_seconds;
+            //         if (weight_ema_1 > weight_peak) {
+            //             weight_peak = weight_ema_1;
+            //         }
+            //     } else if (elapsed_seconds - weight_last_change_time > WEIGHT_IDLE_TIMEOUT) {
+            //         timer_running = false;
 
-                    char buf[SERIAL_BUF_LEN];
-                    format(buf, SERIAL_BUF_LEN,
-                        "{ \"total_time\": %.1f, \"weight\": %.3f, \"weight_peak\": %.3f, \"weight_start\": %.3f }",
-                        weight_last_change_time,
-                        weight_ema_1,
-                        weight_peak,
-                        weight_start
-                    );
+            //         char buf[SERIAL_BUF_LEN];
+            //         format(buf, SERIAL_BUF_LEN,
+            //             "{ \"total_time\": %.1f, \"weight\": %.3f, \"weight_peak\": %.3f, \"weight_start\": %.3f }",
+            //             weight_last_change_time,
+            //             weight_ema_1,
+            //             weight_peak,
+            //             weight_start
+            //         );
 
-                    // Skip the slow updating in case a new weight starts imminently
-                    weight_ema_4 = weight_ema_1;
+            //         // Skip the slow updating in case a new weight starts imminently
+            //         weight_ema_4 = weight_ema_1;
 
-                    ws_server.textAll(buf);
-                }
-            }
+            //         ws_server.textAll(buf);
+            //     }
+            // }
 
             send_websocket_measurement(measurement {
                 weight: weight_ema_1,
@@ -397,7 +410,7 @@ void poll_hx711(void) {
 
 void update_serial(void) {
     if (delay_elapsed(&last_serial_log_millis, SERIAL_LOG_INTERVAL)) {
-        serial_printf("Time: %.1f   Weight: %.1f\n", elapsed_seconds, weight_ema_1);
+        //serial_printf("Time: %.1f   Weight: %.1f\n", elapsed_seconds, weight_ema_1);
     }
 }
 
@@ -516,10 +529,10 @@ void on_websocket_event(
     } else if (type == WS_EVT_DATA) {
         serial_printf("WS (id: %u) DATA: %s\n", id, len > 0 ? (char*) data: "");
 
-        if (is_command(CAL_COMMAND, (char*)data)) {
+        if (is_command(CAL_COMMAND_PREFIX, (char*)data)) {
             serial_printf("WS (id: %u) requested CALIBRATION\n", id);
             calibrate = true;
-        } else if (is_command(TARE_COMMAND, (char*)data)) {
+        } else if (is_command(TARE_COMMAND_PREFIX, (char*)data)) {
             serial_printf("WS (id: %u) requested TARE\n", id);
             tare = true;
         }
@@ -545,6 +558,15 @@ void send_websocket_measurement(measurement m) {
             m.ema3
         );
         ws_server.textAll(buf);
+        //now_broadcast(buf);
+
+        format(buf, SERIAL_BUF_LEN,
+            "%s%d:%d",
+            WEIGHT_PREFIX,
+            (int)(m.weight * 1000),
+            (int)(m.time * 1000));
+
+        now_send_to_bridge(buf);
     }
 }
 
@@ -583,4 +605,29 @@ void send_mqtt_data(void) {
     serial_printf("%s\n", buf);
 
     mqtt_publish(MQTT_TOPIC, buf);
+}
+
+void now_on_receive(const uint8_t *mac, const uint8_t *data, int len) {
+    char now_buf[ESP_NOW_MAX_DATA_LEN + 1];
+    strncpy(now_buf, (const char *)data, len);
+
+    now_buf[len] = '\0';
+
+    char mac_buf[18];
+    format_mac(mac, mac_buf, sizeof(mac_buf));
+
+    char json_buf[JSON_BUF_LEN];
+
+    if (has_prefix((const char*) now_buf, TARE_COMMAND_PREFIX)) {
+        tare = true;
+    } else if (has_prefix((const char*) now_buf, START_TIMER_PREFIX)) {
+        reset_timer();
+        timer_running = true;
+        serial_printf("starting timer\n");
+    } else if (has_prefix((const char*) now_buf, STOP_TIMER_PREFIX)) {
+        timer_running = false;
+        serial_printf("stopping timer\n");
+    } else {
+        serial_printf("%s\n", now_buf);
+    }
 }

@@ -1,6 +1,12 @@
 #include "utils.h"
+#include "config.h"
+#include "rtc_data.h"
 
 bool __utils_eeprom_init = false;
+
+void configure_general(void) {
+    get_rtc_data()->wake_count += 1;
+}
 
 int format(char* buf, int len, const char *fmt, ...) {
     va_list pargs;
@@ -21,8 +27,7 @@ void serial_printf(const char *fmt, ...) {
 
 bool delay_elapsed(unsigned long *last, unsigned long interval) {
     unsigned long now = millis();
-
-    if (now - *last >= interval) {
+    if (*last == 0 || now - *last >= interval) {
         *last = now;
         return true;
     } else {
@@ -59,27 +64,6 @@ void format_mac(const uint8_t *mac, char *buf, int len) {
     );
 }
 
-
-#ifdef __ESP_NOW_H__
-void print_esp_now_result(esp_err_t result, char *prefix) {
-    if (result == ESP_OK) {
-        serial_printf("%s: success\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_NOT_INIT) {
-        serial_printf("%s: espnow not init\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_ARG) {
-        serial_printf("%s: invalid argument\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_INTERNAL) {
-        serial_printf("%s: internal error\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_NO_MEM) {
-        serial_printf("%s: no mem\n", prefix);
-    } else if (result == ESP_ERR_ESPNOW_NOT_FOUND) {
-        serial_printf("%s: peer not found\n", prefix);
-    } else {
-        serial_printf("%s: unknown error %d\n", prefix, result);
-    }
-}
-#endif
-
 void setup_eeprom(void) {
     if (!__utils_eeprom_init) {
         __utils_eeprom_init = true;
@@ -87,52 +71,31 @@ void setup_eeprom(void) {
     }
 }
 
+//TODO: checksums instead of hardcoded valid value
 bool is_eeprom_valid(void) {
     setup_eeprom();
 
     unsigned is_valid = 0;
-    EEPROM.get(EEPROM_VALID_ADDR, is_valid);
+    EEPROM.get(EEPROM_VAL_VALID_ADDR, is_valid);
 
-    return is_valid == EEPROM_VALID_VALUE;
+    return is_valid == EEPROM_VAL_VALID_VALUE;
 }
 
 void wipe_eeprom(void) {
     setup_eeprom();
 
     unsigned valid = 0;
-    EEPROM.put(EEPROM_VALID_ADDR, valid);
+    EEPROM.put(EEPROM_VAL_VALID_ADDR, valid);
     EEPROM.commit();
 }
-
-template<typename T>
-bool read_from_eeprom(int addr, T &out) {
-    setup_eeprom();
-
-    if (is_eeprom_valid()) {
-        EEPROM.get(addr, out);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-template<typename T>
-void write_to_eeprom(int addr, const T &value, bool commit) {
-    setup_eeprom();
-
-    EEPROM.put(addr, value);
-
-    if (commit) {
-        unsigned valid = EEPROM_VALID_VALUE;
-        EEPROM.put(EEPROM_VALID_ADDR, valid);
-        EEPROM.commit();
-    }
-}
-
 
 Filter::Filter(float decay, bool auto_prime) {
     m_decay = decay;
     m_prime = auto_prime;
+}
+
+int Filter::count() {
+    return m_count;
 }
 
 void Filter::push(float v) {
@@ -145,6 +108,7 @@ void Filter::push(float v) {
 
 void Filter::reset(float v) {
     m_value = v;
+    m_count = 0;
 }
 
 float Filter::value() {
