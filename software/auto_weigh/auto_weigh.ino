@@ -25,6 +25,33 @@
 #include "now.h";
 #include "messages.h";
 
+#define PIEZO_PIN   19
+#define PIEZO_FREQ  5000
+#define PIEZO_CHAN  0
+#define PIEZO_RES   8
+#define BEEP_MILLIS 500
+
+#define STEP_LOW_FREQ  1
+#define STEP_HIGH_FREQ 1500
+#define STEP_CHAN      1
+#define STEP_RES       8
+
+#define TARGET_WEIGHT  15.9
+#define LERP_WEIGHT    TARGET_WEIGHT*0.9
+
+#define STEP_PIN    32
+#define DIR_PIN     33
+#define EN_PIN      25
+
+bool run_stepper                    = false;
+unsigned long step_delay_micros     = 2000;
+unsigned long step_remaining_micros = 0;
+unsigned long last_step_micros      = 0;
+bool step_polarity                  = false;
+bool dir_polarity                   = true;
+float target_weight                 = 0;
+int last_step_freq                  = 0;
+
 // How much the calibration weight is
 float known_mass            = KNOWN_CALIBRATION_MASS_DEFAULT;
 
@@ -49,6 +76,7 @@ float weight_ema_1  = 0.0;
 float weight_ema_2  = 0.0;
 float weight_ema_3  = 0.0;
 float weight_ema_4  = 0.0;
+float last_weight   = 0.0;
 
 
 // last time various periodic functions were run
@@ -61,7 +89,8 @@ unsigned long last_tare_millis = 0;
 unsigned long last_cal_millis = 0;
 unsigned long last_tm1638_update_millis = 0;
 unsigned long last_batt_broadcast_millis = 0;
-
+unsigned long end_beep_millis = 0;
+unsigned long last_weighed_beans = 0;
 
 // elapsed_millis is updated every time loop is called
 unsigned long elapsed_millis = 0;
@@ -80,16 +109,21 @@ AsyncWebSocket ws_server("/ws");
 HX711_ADC hx711(PIN_HX711_DT, PIN_HX711_SCK);
 TM1638plus tm1638(PIN_TM1638_STB, PIN_TM1638_CLK, PIN_TM1638_DIO, TM1638_HIGH_FREQ);
 
-
 void setup() {
     setup_serial();
     read_wakeup_reason();
+    // Skip sleep during dev
+    user_wake = true;
 
     configure_and_calibrate_adc1();
     panic_on_fail(configure_analog_pins(), "Failed to configure analog pins");
 
+    setup_step_pwm();
+
     setup_gpio();
     configure_buttons();
+
+    //setup_piezo();
 
     // Read it before starting any heavy current consuming things
     read_batt_until_reliable();
@@ -110,7 +144,7 @@ void setup() {
     configure_now(true, false, false);
     now_set_on_receive(&now_on_receive);
 
-    // configure_wifi(WIFI_SSID, WIFI_PASSWORD);
+    configure_wifi(WIFI_SSID, WIFI_PASSWORD);
     // last = log_time(last, "configure_wifi");
 
     // // scan is off currently because there's a direct wifi connection, which would conflict
@@ -118,7 +152,7 @@ void setup() {
     // configure_now();
     // last = log_time(last, "configure_now");
 
-    // setup_server();
+    setup_server();
     // last = log_time(last, "setup_server");
 
     // configure_mqtt(MQTT_URL);
@@ -164,9 +198,54 @@ void loop() {
     update_serial();
     sample_to_filters();
     print_wifi_status();
-    now_update();
+    // now_update();
 
-    delay(1);
+    update_tone();
+
+    update_stepper();
+    update_weigh_out_beans();
+}
+
+void update_weigh_out_beans(void) {
+    if (target_weight > 0 && delay_elapsed(&last_weighed_beans, 500)) {
+        auto lerp_over = LERP_WEIGHT;
+        auto delta = target_weight - weight_new;
+
+        auto alpha = delta / lerp_over;
+        if (alpha > 1.0) { alpha = 1.0; }
+        else if (alpha < 0.0) { alpha = 0.0; }
+
+        auto lerp = STEP_LOW_FREQ + alpha * (STEP_HIGH_FREQ - STEP_LOW_FREQ);
+        set_step_freq(lerp);
+
+        if (delta > 0) {
+            serial_printf("Weight remaining: %f\n", delta);
+            run_stepper = true;
+        } else {
+            run_stepper = false;
+            target_weight = 0;
+        }
+    }
+}
+
+void update_stepper(void) {
+    enable_stepping(run_stepper);
+    // unsigned long now = micros();
+    // unsigned long elapsed = now - last_step_micros;
+    // last_step_micros = now;
+
+    // if (run_stepper) {
+    //     // serial_printf("step_remaining_micros: %lu, elapsed: %lu\n", step_remaining_micros, elapsed);
+    //     if (step_remaining_micros > elapsed) {
+    //         step_remaining_micros -= elapsed;
+    //     } else {
+    //         step_polarity = !step_polarity;
+    //         digitalWrite(STEP_PIN, step_polarity);
+    //         step_remaining_micros = step_delay_micros;
+    //     }
+    // } else {
+    //     step_remaining_micros = 0;
+    // }
 }
 
 void handle_buttons() {
@@ -184,6 +263,11 @@ void handle_buttons() {
     {
         serial_printf("power button pressed. going to sleep\n");
         sleep();
+    }
+
+    if (is_timer_requested()) {
+        //run_stepper = true;
+        target_weight = TARGET_WEIGHT;
     }
 }
 
@@ -214,6 +298,68 @@ void setup_serial(void) {
     serial_printf("%s v%s (%s). MAC: %s\n", PROJECT, VERSION, BUILD_TIMESTAMP, mac_address());
     setCpuFrequencyMhz(CPU_MHZ);
     serial_printf("CPU running at %lu\n", getCpuFrequencyMhz());
+}
+
+void setup_piezo(void) {
+    // setup pwm for channel
+    ledcSetup(PIEZO_CHAN, PIEZO_FREQ, PIEZO_RES);
+
+    // attach the pin to the pwm channel
+    ledcAttachPin(PIEZO_PIN, PIEZO_CHAN);
+
+    set_piezo_duty(0);
+}
+
+void set_step_freq(int freq) {
+    if (freq != last_step_freq) {
+        if (freq >= last_step_freq) {
+            last_step_freq = last_step_freq + (freq - last_step_freq) * 0.5;
+            if (last_step_freq * 1.05 >= freq) {
+                last_step_freq = freq;
+            }
+        } else {
+            last_step_freq = freq;
+        }
+
+        // double actual_freq = ledcChangeFrequency(STEP_CHAN, freq, STEP_RES);
+        double actual_freq = ledcSetup(STEP_CHAN, last_step_freq, STEP_RES);
+        serial_printf("Actual step frequency: %f\n", actual_freq);
+    }
+}
+
+void setup_step_pwm(void) {
+    // double actual_freq = ledcSetup(STEP_CHAN, STEP_LOW_FREQ, STEP_RES);
+    // serial_printf("Actual step frequency: %f\n", actual_freq);
+    set_step_freq(STEP_LOW_FREQ);
+
+    // attach the pin to the pwm channel
+    ledcAttachPin(STEP_PIN, STEP_CHAN);
+
+    enable_stepping(false);
+}
+
+void set_piezo_duty(int d) {
+    ledcWrite(PIEZO_CHAN, d);
+}
+
+void enable_stepping(bool en) {
+    // serial_printf("enable_stepping: %s\n", en ? "true" : "false" );
+    if (en) {
+        ledcWrite(STEP_CHAN, 1<<(STEP_RES-1));
+    } else {
+        ledcWrite(STEP_CHAN, 0);
+    }
+}
+
+void beep(void) {
+    end_beep_millis = millis() + BEEP_MILLIS;
+    set_piezo_duty(128);
+}
+
+void update_tone(void) {
+    if (millis() > end_beep_millis) {
+        set_piezo_duty(0);
+    }
 }
 
 void setup_server(void) {
@@ -248,6 +394,15 @@ void setup_server(void) {
 void setup_gpio(void) {
     pinMode(PIN_EN_BATT_DIVIDER, OUTPUT);
     digitalWrite(PIN_EN_BATT_DIVIDER, HIGH);
+
+
+    pinMode(EN_PIN, OUTPUT);
+    //pinMode(STEP_PIN, OUTPUT);
+    pinMode(DIR_PIN, OUTPUT);
+
+    digitalWrite(DIR_PIN, dir_polarity);
+    //digitalWrite(STEP_PIN, step_polarity);
+    digitalWrite(EN_PIN, LOW);
 }
 
 void setup_hx711(void) {
@@ -295,7 +450,8 @@ void tare_hx711(bool wait) {
 
 void poll_hx711(void) {
     if (hx711.update()) {
-        if (delay_elapsed(&last_weight_poll_millis, HX711_POLL_INTERVAL)) {
+        if (true || delay_elapsed(&last_weight_poll_millis, 10)) {
+        //if (delay_elapsed(&last_weight_poll_millis, HX711_POLL_INTERVAL)) {
 
             if (tare || calibrate) {
                 // Reset the timer
@@ -346,22 +502,32 @@ void poll_hx711(void) {
 
             weight_new = hx711.getData();
 
+            if (weight_new > (last_weight + 0.1)) {
+                beep();
+                last_weight = weight_new;
+                // run_stepper = false;
+            } else if (weight_new < last_weight) {
+                last_weight = weight_new;
+            }
+
+            //serial_printf("weight_new: %f\n", weight_new);
+
 
             // ema 1 is just a gentle smoothing to remove noise/drips/etc
-            weight_ema_1 += (weight_new - weight_ema_1) * WEIGHT_EMA_FACTOR_1;
+            weight_ema_1 += (weight_new - weight_ema_1) * 1;
 
-            // ema 2 and 3 are used to detect if there is a changing weight
-            weight_ema_2 += (weight_ema_1 - weight_ema_2) * WEIGHT_EMA_FACTOR_2;
-            weight_ema_3 += (weight_ema_1 - weight_ema_3) * WEIGHT_EMA_FACTOR_3;
+            // // ema 2 and 3 are used to detect if there is a changing weight
+            // weight_ema_2 += (weight_ema_1 - weight_ema_2) * WEIGHT_EMA_FACTOR_2;
+            // weight_ema_3 += (weight_ema_1 - weight_ema_3) * WEIGHT_EMA_FACTOR_3;
 
-            // ema 4 is the source for the weight_start value
-            weight_ema_4 += (weight_ema_1 - weight_ema_4) * WEIGHT_EMA_FACTOR_4;
+            // // ema 4 is the source for the weight_start value
+            // weight_ema_4 += (weight_ema_1 - weight_ema_4) * WEIGHT_EMA_FACTOR_4;
 
-            // Only detect increasing weight for starting
-            bool start = weight_ema_2 > (weight_ema_3 + WEIGHT_START_DELTA);
-            // But any change thereafter should keep the run going (the weight
-            // tends to bounce a bit as drips land and cause the scale to wobble)
-            bool change = abs(weight_ema_2 - weight_ema_3) > WEIGHT_HYSTERESIS;
+            // // Only detect increasing weight for starting
+            // bool start = weight_ema_2 > (weight_ema_3 + WEIGHT_START_DELTA);
+            // // But any change thereafter should keep the run going (the weight
+            // // tends to bounce a bit as drips land and cause the scale to wobble)
+            // bool change = abs(weight_ema_2 - weight_ema_3) > WEIGHT_HYSTERESIS;
 
             // if (!timer_running && start) {
             //     reset_timer();
@@ -397,13 +563,13 @@ void poll_hx711(void) {
             //     }
             // }
 
-            send_websocket_measurement(measurement {
-                weight: weight_ema_1,
-                time: elapsed_seconds,
-                timer_running: timer_running,
-                ema2: weight_ema_2,
-                ema3: weight_ema_3,
-            });
+            // send_websocket_measurement(measurement {
+            //     weight: weight_ema_1,
+            //     time: elapsed_seconds,
+            //     timer_running: timer_running,
+            //     ema2: weight_ema_2,
+            //     ema3: weight_ema_3,
+            // });
         }
     }
 }
@@ -436,7 +602,7 @@ void read_batt_until_reliable(void) {
 }
 
 void update_tm1638(void) {
-    if (delay_elapsed(&last_tm1638_update_millis, TM1638_UPDATE_INTERVAL)) {
+    if (delay_elapsed(&last_tm1638_update_millis, 100)) { //TM1638_UPDATE_INTERVAL)) {
         long seconds = elapsed_millis / 1000;
         while (seconds > 9999) {
             seconds -= 9999;

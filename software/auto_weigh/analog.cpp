@@ -1,0 +1,1 @@
+../shared/analog.cpp

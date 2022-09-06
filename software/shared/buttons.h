@@ -13,3 +13,4 @@ void configure_buttons(void);
 bool is_tare_requested(void);
 bool is_calibrate_requested(void);
 bool is_power_requested(void);
+bool is_timer_requested(void);

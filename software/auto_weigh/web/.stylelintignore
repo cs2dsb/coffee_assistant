@@ -1,0 +1,6 @@
+.git
+.npmrc
+.yarnrc
+build
+dist
+node_modules

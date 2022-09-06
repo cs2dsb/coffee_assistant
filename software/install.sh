@@ -179,6 +179,7 @@ cat > arduino-cli.yml <<- EOF
 board_manager:
   additional_urls:
     - https://dl.espressif.com/dl/package_esp32_index.json
+    # - https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
 
 directories:
   user: "$BASE_DIR"

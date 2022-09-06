@@ -13,6 +13,7 @@ unsigned long last_button_update_millis = 0;
 bool tare_requested = false;
 bool calibrate_requested = false;
 bool power_requested = false;
+bool timer_requested = false;
 
 void handle_button_action(int button, int action) {
     switch (action) {
@@ -46,6 +47,12 @@ void handle_button_action(int button, int action) {
             power_requested = true;
         }
     }
+
+    if (button == BUTTON_INDEX_TIMER) {
+        if (action == SHORT_PRESS) {
+            timer_requested = true;
+        }
+    }
 }
 
 void update_button_state(void) {
@@ -66,8 +73,11 @@ void update_button_state(void) {
         // iterations to reset it if the button is held.
         // This could all be done without the isrs but by using them
         // you get nice hardware press debouncing for free
-        if (touchRead(button_pin[i]) > TOUCH_THRESHOLD) {
+        auto state = touchRead(button_pin[i]);
+        if (state > TOUCH_THRESHOLD) {
             button_isr_state[i] = false;
+        } else {
+            // serial_printf("touch value: %d\n", state);
         }
 
         bool pressed = button_state[i][0] && !button_state[i][1];
@@ -97,15 +107,15 @@ void update_button_state(void) {
     }
 }
 
-void touch_power_isr(void) {
+void IRAM_ATTR touch_power_isr(void) {
     button_isr_state[BUTTON_INDEX_POWER] = true;
 }
 
-void touch_tare_isr(void) {
+void IRAM_ATTR touch_tare_isr(void) {
     button_isr_state[BUTTON_INDEX_TARE] = true;
 }
 
-void touch_timer_isr(void) {
+void IRAM_ATTR touch_timer_isr(void) {
     button_isr_state[BUTTON_INDEX_TIMER] = true;
 }
 
@@ -130,5 +140,11 @@ bool is_calibrate_requested(void) {
 bool is_power_requested(void) {
     bool v = power_requested;
     power_requested = false;
+    return v;
+}
+
+bool is_timer_requested(void) {
+    bool v = timer_requested;
+    timer_requested = false;
     return v;
 }

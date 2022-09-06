@@ -27,9 +27,9 @@
 #define TIMER_INTERVAL                  100
 #define HTTP_PORT                       80
 #define DEFAULT_CALIBRATION             3300
-#define TOUCH_THRESHOLD                 50
+#define TOUCH_THRESHOLD                 40
 #define BATT_BROADCAST_INTERVAL         10000
-#define DEEP_SLEEP_SECONDS              60*60
+#define DEEP_SLEEP_SECONDS              6*60*60
 // This is how often now will look for the relay
 #define NOW_UPDATE_INTERVAL             2000
 
@@ -47,7 +47,7 @@
 
 
 // For debugging, if this is set to true the eeprom will be cleared during read operations
-#define WIPE_EEPROM                     true
+#define WIPE_EEPROM                     false
 
 // EEPROM is actually emulated using a flash 'partition' that's bigger than 512
 #define EEPROM_SIZE                     512
@@ -64,7 +64,7 @@
 #define KNOWN_CALIBRATION_MASS_DEFAULT  100.0
 #define WEIGHT_HYSTERESIS               0.1
 #define WEIGHT_START_DELTA              0.2
-#define WEIGHT_EMA_FACTOR_1             0.99
+#define WEIGHT_EMA_FACTOR_1             0.999
 #define WEIGHT_EMA_FACTOR_2             0.9
 #define WEIGHT_EMA_FACTOR_3             0.6
 #define WEIGHT_EMA_FACTOR_4             0.05
