@@ -223,8 +223,10 @@ if test -d "$SPIFFS_DIR"; then
         SPIFFS_SIZE=${SPIFFS_SIZE:-0x170000}
         SPIFFS_OFFSET=${SPIFFS_OFFSET:-0x290000}
     fi
-    #MKSPIFFS="`find .arduino15 -name mkspiffs -type f | head -n 1`"
-    MKSPIFFS=./third_party/mklittlefs/mklittlefs
+    # MKSPIFFS="`find .arduino15 -name mkspiffs -type f | head -n 1`"
+    # MKSPIFFS=./third_party/mklittlefs/mklittlefs
+    MKSPIFFS="`find .arduino15 -name mklittlefs -type f | head -n 1`"
+    
     ESPTOOL="`find .arduino15 -name esptool.py -type f | head -n 1`"
 
     "$MKSPIFFS" -c "$SPIFFS_DIR" -b 4096 -p 256 -s $SPIFFS_SIZE "$SPIFFS_BIN"
@@ -245,7 +247,7 @@ if test -d "$SPIFFS_DIR"; then
         if [ "$FLASH" == "true" ] && [ "$SERIAL_PORT" != "" ]; then
             echo -e "$(tput setaf 0)$(tput setab 2)\n\n  Flashing SPIFFS\n$(tput sgr0)"
 
-            "$ESPTOOL" \
+            python "$ESPTOOL" \
                 --chip esp32 \
                 --port "$SERIAL_PORT" \
                 --baud 921600 \

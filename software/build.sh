@@ -79,6 +79,8 @@ if [ "$BUILD" == "true" ]; then
         fi
     done
 
+    ln -s "../credentials.h" "$PROJECT/credentials.h"
+
     $A_CLI $A_CFG compile \
         --fqbn "$FQBN" \
         --build-path $A_BUILD \

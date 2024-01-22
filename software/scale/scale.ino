@@ -2,8 +2,8 @@
 #include <stdarg.h>
 #include <ESPmDNS.h>
 #include <FS.h>
-#define SPIFFS LITTLEFS
-#include <LITTLEFS.h>
+#define SPIFFS LittleFS
+#include <LittleFS.h>
 #include <EEPROM.h>
 
 #include <AsyncTCP.h>
@@ -106,8 +106,8 @@ void setup() {
     unsigned long last = start;
 
 
-    configure_wifi(NULL, NULL, WIFI_STA, WIFI_PS_MIN_MODEM, false, false);
-    configure_now(true, false, false);
+    configure_wifi(WIFI_SSID, WIFI_PASSWORD, WIFI_STA, WIFI_PS_MIN_MODEM, false, true);
+    // configure_now(true, false, false);
     now_set_on_receive(&now_on_receive);
 
     // configure_wifi(WIFI_SSID, WIFI_PASSWORD);
@@ -118,7 +118,7 @@ void setup() {
     // configure_now();
     // last = log_time(last, "configure_now");
 
-    // setup_server();
+    setup_server();
     // last = log_time(last, "setup_server");
 
     // configure_mqtt(MQTT_URL);
@@ -174,7 +174,7 @@ void handle_buttons() {
         tare = true;
     }
 
-    if (is_calibrate_requested()) {
+    if (!CALIBRATION_LOCKED && is_calibrate_requested()) {
         calibrate = true;
     }
 

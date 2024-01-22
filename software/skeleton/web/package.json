@@ -121,6 +121,6 @@
     "react-router-dom": "^5.2.0",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^2.0.3",
-    "yarn": "^1.22.10"
+    "yarn": "^1.22.19"
   }
 }

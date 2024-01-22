@@ -16,7 +16,7 @@
 #define BLINK_INTERVAL                  1000
 #define HX711_POLL_INTERVAL             500
 #define TM1638_POLL_INTERVAL            100
-#define TM1638_UPDATE_INTERVAL          500
+#define TM1638_UPDATE_INTERVAL          200
 #define BUTTON_UPDATE_INTERVAL          15
 #define BUTTON_PRESS_INTERVAL           80
 #define BUTTON_LONG_PRESS_INTERVAL      1500
@@ -57,6 +57,9 @@
 #define EEPROM_CHANNEL_ADDR             (EEPROM_CAL_ADDR + sizeof(float))
 #define EEPROM_CHANNEL_LOCKED_ADDR      (EEPROM_CHANNEL_ADDR + sizeof(channel_t))
 #define EEPROM_BRIDGE_MAC_ADDR          (EEPROM_CHANNEL_LOCKED_ADDR + sizeof(channel_locked_t))
+// #define EEPROM_CAL_LOCKED_ADDR          (EEPROM_BRIDGE_MAC_ADDR + sizeof(mac_addr_t))
+#define CALIBRATION_LOCKED              true|
+
 
 // The amount (in calibrated units, grams typically) to wait for to detect the
 // start of a weighing event
